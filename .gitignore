@@ -1,0 +1,16 @@
+.env
+.csv-analyst/
+runs/
+.venv/
+.tools/
+.uv-cache/
+.tmp/
+.tmp-user/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
