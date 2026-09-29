@@ -90,7 +90,7 @@ async def run_session(
     finally:
         await stream.close()
 
-    if reason == "end_turn" and not errors:
+    if reason == "end_turn":
         status: RunStatus = "completed"
     elif reason == "budget_reached":
         status = "paused_budget"
