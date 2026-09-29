@@ -179,18 +179,27 @@ def _many_table(
 def _show_summary(console: Console, summary: RunSummary) -> None:
     table = Table(title="Run summary")
     for heading in (
-        "CSV", "Session", "Status", "Stop reason", "Cost",
-        "Active seconds", "Artifacts"
+        "CSV",
+        "Session",
+        "Status",
+        "Stop reason",
+        "Cost",
+        "Active seconds",
+        "Artifacts",
     ):
         table.add_column(heading)
     for item in summary.sessions:
         active = (
-            f"{item.active_seconds:.1f}"
-            if item.active_seconds is not None else "—"
+            f"{item.active_seconds:.1f}" if item.active_seconds is not None else "—"
         )
         table.add_row(
-            item.label, item.session_id or "—", item.status, item.stop_reason,
-            format_cost(item.list_cost_cents), active, item.artifacts_path or "—",
+            item.label,
+            item.session_id or "—",
+            item.status,
+            item.stop_reason,
+            format_cost(item.list_cost_cents),
+            active,
+            item.artifacts_path or "—",
         )
     console.print(table)
     console.print(f"Run total: {format_cost(summary.total_list_cost_cents)}")
@@ -199,8 +208,11 @@ def _show_summary(console: Console, summary: RunSummary) -> None:
     isolation.add_column("Result")
     for item in summary.sessions:
         verdict = (
-            "✅ pass" if item.isolation is True
-            else "❌ fail" if item.isolation is False else "pending"
+            "✅ pass"
+            if item.isolation is True
+            else "❌ fail"
+            if item.isolation is False
+            else "pending"
         )
         isolation.add_row(item.label, verdict)
     console.print(isolation)
@@ -245,7 +257,8 @@ def run(
         typer.echo("Choose either --budget-cents or --no-budget.", err=True)
         raise typer.Exit(code=2)
     cap = (
-        None if no_budget
+        None
+        if no_budget
         else (budget_cents if budget_cents is not None else settings.budget_cents)
     )
     limit = timeout_s if timeout_s is not None else settings.timeout_s
@@ -265,15 +278,18 @@ def run(
         }
         try:
             with Live(_many_table(files, states), console=console) as live:
+
                 def on_progress(event: ProgressEvent) -> None:
                     previous = states[event.label]
                     cost = (
                         event.list_cost_cents
-                        if event.list_cost_cents is not None else previous[2]
+                        if event.list_cost_cents is not None
+                        else previous[2]
                     )
                     latest = (
                         f"[{event.tool_name}] {event.text}"
-                        if event.tool_name else event.text
+                        if event.tool_name
+                        else event.text
                     )
                     states[event.label] = (event.kind, latest, cost)
                     live.update(_many_table(files, states))
@@ -281,7 +297,8 @@ def run(
                 def on_raw(label: str, event: dict[str, object]) -> None:
                     if event_file is not None:
                         payload: object = (
-                            event if len(files) == 1
+                            event
+                            if len(files) == 1
                             else {"label": label, "event": event}
                         )
                         event_file.write(json.dumps(payload, sort_keys=True) + "\n")
@@ -304,7 +321,9 @@ def run(
                 )
                 for item in summary.sessions:
                     states[item.label] = (
-                        item.status, item.stop_reason, item.list_cost_cents
+                        item.status,
+                        item.stop_reason,
+                        item.list_cost_cents,
                     )
                 live.update(_many_table(files, states))
             return summary
@@ -345,7 +364,9 @@ def run(
             console.print(f"{item.label}: {item.error}")
     if any(item.isolation is False for item in summary.sessions):
         raise typer.Exit(code=2)
-    if any(item.status not in {"completed", "paused_budget"} for item in summary.sessions):
+    if any(
+        item.status not in {"completed", "paused_budget"} for item in summary.sessions
+    ):
         raise typer.Exit(code=1)
 
 
@@ -377,15 +398,17 @@ def raise_budget(
                 _progress_table("resuming", "", session.list_cost_cents),
                 console=console,
             ) as live:
+
                 def on_progress(event: ProgressEvent) -> None:
                     live.update(
-                        _progress_table(
-                            event.kind, event.text, event.list_cost_cents
-                        )
+                        _progress_table(event.kind, event.text, event.list_cost_cents)
                     )
 
                 result = await resume_budget_session(
-                    platform, session_id, to_cents, timeout_s=limit,
+                    platform,
+                    session_id,
+                    to_cents,
+                    timeout_s=limit,
                     sink=on_progress,
                 )
                 live.update(

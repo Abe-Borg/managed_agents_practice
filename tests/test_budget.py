@@ -13,33 +13,30 @@ async def test_raise_budget_requires_room_above_consumed_cost() -> None:
         {"type": "session.status_idle", "stop_reason": {"type": "budget_reached"}}
     ]
     with pytest.raises(ValueError, match="more than one cent"):
-        await resume_budget_session(
-            platform, "sesn_fake", 7, timeout_s=10
-        )
+        await resume_budget_session(platform, "sesn_fake", 7, timeout_s=10)
     assert platform.updated_budget is None
 
 
 @pytest.mark.asyncio
 async def test_raise_budget_updates_then_streams_without_message() -> None:
-    platform = FakeSessionPlatform([
-        {"type": "session.usage", "usage": {
-            "list_cost": {"amount": "21"}, "active_seconds": 4.5
-        }},
-        {"type": "session.status_idle", "stop_reason": {"type": "end_turn"}},
-    ])
+    platform = FakeSessionPlatform(
+        [
+            {
+                "type": "session.usage",
+                "usage": {"list_cost": {"amount": "21"}, "active_seconds": 4.5},
+            },
+            {"type": "session.status_idle", "stop_reason": {"type": "end_turn"}},
+        ]
+    )
     platform.history_events = [
         {"type": "session.status_idle", "stop_reason": {"type": "budget_reached"}}
     ]
-    result = await resume_budget_session(
-        platform, "sesn_fake", 100, timeout_s=10
-    )
+    result = await resume_budget_session(platform, "sesn_fake", 100, timeout_s=10)
     assert result.status == "completed"
     assert result.list_cost_cents == 21
     assert result.active_seconds == 4.5
     assert platform.updated_budget == 100
-    assert platform.calls == [
-        "stream.open", "session.update_budget", "stream.close"
-    ]
+    assert platform.calls == ["stream.open", "session.update_budget", "stream.close"]
 
 
 @pytest.mark.asyncio
@@ -49,6 +46,4 @@ async def test_raise_budget_rejects_non_budget_pause() -> None:
         {"type": "session.status_idle", "stop_reason": {"type": "end_turn"}}
     ]
     with pytest.raises(ValueError, match="not paused"):
-        await resume_budget_session(
-            platform, "sesn_fake", 100, timeout_s=10
-        )
+        await resume_budget_session(platform, "sesn_fake", 100, timeout_s=10)

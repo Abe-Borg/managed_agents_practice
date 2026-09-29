@@ -369,9 +369,7 @@ class SdkSessionPlatform:
             list_cost_cents=(
                 int(usage.list_cost.amount) if usage is not None else None
             ),
-            active_seconds=(
-                float(usage.active_seconds) if usage is not None else None
-            ),
+            active_seconds=(float(usage.active_seconds) if usage is not None else None),
         )
 
     async def update_session_budget(self, session_id: str, to_cents: int) -> None:

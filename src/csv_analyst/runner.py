@@ -78,7 +78,8 @@ async def run_session(
         try:
             async with asyncio.timeout(timeout_s):
                 await platform.send_message(
-                    session.id, build_user_message(input_path.name, input_path.stem, run_id)
+                    session.id,
+                    build_user_message(input_path.name, input_path.stem, run_id),
                 )
                 async for raw in stream:
                     if raw_sink is not None:
@@ -148,7 +149,11 @@ async def resume_budget_session(
         raise ValueError("New cap must exceed consumed list cost by more than one cent")
     events = await platform.list_events(session_id)
     idle = next(
-        (event for event in reversed(events) if event.get("type") == "session.status_idle"),
+        (
+            event
+            for event in reversed(events)
+            if event.get("type") == "session.status_idle"
+        ),
         None,
     )
     stop = idle.get("stop_reason") if idle is not None else None

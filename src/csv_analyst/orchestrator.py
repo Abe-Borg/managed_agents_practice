@@ -102,7 +102,9 @@ async def run_many(
         raise ValueError("Provide CSV files and a positive max_parallel")
     stems = [path.stem.casefold() for path in files]
     if len(set(stems)) != len(stems):
-        raise ValueError("CSV input stems must be distinct to avoid artifact collisions")
+        raise ValueError(
+            "CSV input stems must be distinct to avoid artifact collisions"
+        )
     semaphore = asyncio.Semaphore(max_parallel)
 
     async def one(path: Path) -> SessionOutcome:
@@ -165,10 +167,14 @@ async def run_many(
             except OutputError as exc:
                 error = str(exc)
                 status = "failed"
-                reason = "isolation_failed" if (
-                    "unexpected uploads" in error
-                    or "unexpected sandbox markers" in error
-                ) else "output_error"
+                reason = (
+                    "isolation_failed"
+                    if (
+                        "unexpected uploads" in error
+                        or "unexpected sandbox markers" in error
+                    )
+                    else "output_error"
+                )
                 isolation = False if reason == "isolation_failed" else None
             except Exception as exc:
                 error = f"{type(exc).__name__}: {exc}"

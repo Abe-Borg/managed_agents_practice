@@ -49,12 +49,19 @@ def test_three_sessions_overlap_and_are_isolated(tmp_path: Path) -> None:
         Path("fixtures/weather.csv"),
         Path("fixtures/web_traffic.csv"),
     ]
-    summary = asyncio.run(run_many(
-        files, lambda: SdkSessionPlatform(api_key),
-        agent_id, environment_id, "live-parallel",
-        budget_cents=100, timeout_s=600, max_parallel=3,
-        output_root=tmp_path / "parallel",
-    ))
+    summary = asyncio.run(
+        run_many(
+            files,
+            lambda: SdkSessionPlatform(api_key),
+            agent_id,
+            environment_id,
+            "live-parallel",
+            budget_cents=100,
+            timeout_s=600,
+            max_parallel=3,
+            output_root=tmp_path / "parallel",
+        )
+    )
     assert len(summary.sessions) == 3
     assert all(item.status == "completed" for item in summary.sessions)
     assert all(item.isolation is True for item in summary.sessions)
@@ -76,8 +83,13 @@ def test_budget_pause_and_resume(tmp_path: Path) -> None:
         platform = SdkSessionPlatform(api_key)
         try:
             first = await run_session(
-                platform, Path("fixtures/sales.csv"), agent_id, environment_id,
-                "live-budget", budget_cents=5, timeout_s=600,
+                platform,
+                Path("fixtures/sales.csv"),
+                agent_id,
+                environment_id,
+                "live-budget",
+                budget_cents=5,
+                timeout_s=600,
             )
             assert first.status == "paused_budget", first
             resumed = await resume_budget_session(
