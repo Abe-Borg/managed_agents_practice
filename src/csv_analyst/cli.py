@@ -23,6 +23,7 @@ from csv_analyst.events import ProgressEvent
 from csv_analyst.outputs import OutputError, collect
 from csv_analyst.platform import (
     PlatformConflict,
+    PlatformNotFound,
     PlatformValidationError,
     SdkPlatform,
     SdkSessionPlatform,
@@ -92,7 +93,16 @@ def setup() -> None:
     platform, settings = _configured_platform()
     try:
         environment = ensure_environment(platform, build_environment_spec())
-        if load_state().agent_id is None:
+        saved_agent_id = load_state().agent_id
+        try:
+            saved_agent = (
+                platform.retrieve_agent(saved_agent_id)
+                if saved_agent_id is not None
+                else None
+            )
+        except PlatformNotFound:
+            saved_agent = None
+        if saved_agent is None or saved_agent.archived:
             ensure_agent(platform, build_agent_spec(settings))
         skill = ensure_skill(platform, SKILL_DIR)
         agent = ensure_agent(
