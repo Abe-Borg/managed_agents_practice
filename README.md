@@ -1,6 +1,6 @@
 # csv-analyst
 
-`csv-analyst` is a planned local CLI and web app for analyzing CSV files with Claude Managed Agents. Each CSV will run in its own managed session and produce a report, charts, and downloadable analysis files. The current Phase 1 scaffold provides project configuration, sample CSVs, and an offline health check; agent sessions and the web UI arrive in later phases.
+`csv-analyst` is a planned local CLI and web app for analyzing CSV files with Claude Managed Agents. Each CSV will run in its own managed session and produce a report, charts, and downloadable analysis files. The current build provides project configuration, sample CSVs, an offline health check, and setup of saved Agent and Environment resources; sessions and the web UI arrive in later phases.
 
 ## Get started
 
@@ -15,6 +15,18 @@ uv run csv-analyst doctor
 Edit `.env` to change the model or budget. An Anthropic API key is not needed for `doctor`. When you later run commands that use Managed Agents, set `ANTHROPIC_API_KEY` in your environment or in the local `.env` file. Keep that file private; `.env.example` contains placeholder values only.
 
 `doctor` reports the Python and `anthropic` SDK versions, whether a key is present, the selected model, and the budget. It does not make an API request or display the key.
+
+## Create saved resources
+
+With `ANTHROPIC_API_KEY` configured locally, create the reusable Environment and Agent:
+
+```powershell
+uv run csv-analyst setup
+uv run csv-analyst setup       # reports unchanged on the second run
+uv run csv-analyst resources   # shows IDs and Agent versions
+```
+
+`setup` creates saved configuration only; CSV sessions arrive in Phase 3. The Environment starts with limited networking and no allowed outbound hosts. If the API rejects an empty host list, `setup` reports and records its unrestricted fallback.
 
 ## Check the scaffold
 
