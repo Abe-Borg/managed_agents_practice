@@ -41,6 +41,19 @@ Checked the official HTML pages on 2026-09-28 PT before implementing Phase 3 and
 | Async stream usage | Installed `AsyncEvents.stream` is an `async def` returning `AsyncStream`; await it, then use `async with stream` and `async for event in stream`. The SDK stream path includes `?beta=true` and sets the Managed Agents beta header. | https://platform.claude.com/docs/en/api/beta/sessions/events/stream | 2026-09-28 | Phase 3 / PR #3 | SDK source |
 | Retry errors and final turn status | A `session.error` has `error.retry_status`; `retrying` means the server retries automatically, while `exhausted` ends the turn and `terminal` terminates the session. `session.status_idle` with `stop_reason.type=end_turn` means the agent completed its turn naturally. A prior retrying error does not override that final outcome. | https://platform.claude.com/docs/en/api/cli/beta/sessions/events | 2026-09-29 | Phase 3 / PR #3 review | docs |
 
+## Phase 4 documentation checks
+
+Checked the official HTML pages on 2026-09-29 PT before implementing Phase 4. No live API call was made. The Skills API is generally available through `client.skills`; Managed Agents endpoints still require their beta header.
+
+| Fact | Value | Source URL | Verified (PT) | By (phase/PR) | Method |
+|------|-------|-----------|---------------|---------------|--------|
+| Custom Skill upload | A Skill bundle has `SKILL.md` at its root, optional scripts, and may be passed as `client.skills.create(files=files_from_dir(path))`. The returned Skill has `id` and `latest_version_id`. | https://platform.claude.com/docs/en/build-with-claude/skills-guide | 2026-09-29 | Phase 4 | docs |
+| Skill versions | `client.skills.versions.create(skill_id=..., files=files_from_dir(path))` uploads a complete new snapshot; omitted files are not carried forward. Custom version IDs use `skver_...`. | https://platform.claude.com/docs/en/build-with-claude/skills-guide | 2026-09-29 | Phase 4 | docs |
+| Skill frontmatter | `name` and `description` are required. Names are at most 64 lowercase letters, digits, or hyphens and exclude reserved words `anthropic` and `claude`; descriptions are non-empty and at most 1024 characters, with no XML tags. | https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview | 2026-09-29 | Phase 4 | docs |
+| Agent Skill attachment | An attached custom Skill uses `{"type":"custom","skill_id":"skill_*","version":"latest"}` in the Agent `skills` array; `version` may instead pin an exact version. | https://platform.claude.com/docs/en/managed-agents/skills | 2026-09-29 | Phase 4 | docs |
+| Session agent reference and overrides | A string Agent ID selects latest; `{"type":"agent","id":...,"version":N}` pins a version. `agent_with_overrides` accepts an optional base version and replacement fields such as `model:{"id":...}`; overrides do not change the saved Agent. The response's resolved `agent` includes its ID, version, model, and effective fields. | https://platform.claude.com/docs/en/managed-agents/sessions | 2026-09-29 | Phase 4 | docs |
+| Override model | `claude-sonnet-5-5` is a current Claude API model ID at $2 input and $10 output per million tokens. | https://platform.claude.com/docs/en/models/overview | 2026-09-29 | Phase 4 | docs |
+
 ## Plan snapshot: remaining facts to re-verify before implementation
 
 The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PLAN.md). Their values have **not** been independently checked here. Re-fetch the linked official pages in the phase that uses each fact and replace the status with a dated verification before relying on it in code.
@@ -49,8 +62,6 @@ The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PL
 |------|--------------------|---------------------|---------------|---------------|--------|
 | HTTP API conventions | Base `https://api.anthropic.com`; `x-api-key`, `anthropic-version: 2023-06-01`, and Managed Agents beta header; some stream examples use `?beta=true`. | https://platform.claude.com/docs/en/managed-agents/overview | — | plan §4; re-verify | plan snapshot |
 | Managed Agents rate limits | Plan says 300 create requests/minute and 1,200 read requests/minute per organization, subject to other limits. | https://platform.claude.com/docs/en/managed-agents/reference | — | plan §4; re-verify | plan snapshot |
-| Skill operations | `skills.create(files=files_from_dir(...))` and `skills.versions.create`; verify upload and agent attachment fields before Phase 4. | https://platform.claude.com/docs/en/managed-agents/skills | — | plan §4; re-verify | plan snapshot |
-| Other model IDs and prices | Plan lists `claude-fable-5-1`, `claude-opus-5-5`, and `claude-sonnet-5-5`; recheck prices and model availability when selecting an override. | https://platform.claude.com/docs/en/about-claude/models/overview | — | plan §4; re-verify | plan snapshot |
 
 ## Live-call observations
 
