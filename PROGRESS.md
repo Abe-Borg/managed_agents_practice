@@ -7,7 +7,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | # | Phase | Status | PR | Date (PT) | Notes |
 |---|-------|--------|----|-----------|-------|
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
-| 2 | Environment + saved Agent (`setup`) | 🚧 in progress | — | 2026-09-28 | API docs and SDK signatures re-verified; 22 offline tests pass. Live verification pending (no key in agent env). |
+| 2 | Environment + saved Agent (`setup`) | 🔍 in review | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | API docs and SDK signatures re-verified; 22 offline tests pass. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ⬜ todo | — | — | — |
 | 4 | Custom Skill + agent versioning + session overrides | ⬜ todo | — | — | — |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
@@ -29,7 +29,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
 <!-- - [x] resolved: answer — source URL/date -->
-- [x] GitHub target resolved: [Abe-Borg/managed_agents_practice](https://github.com/Abe-Borg/managed_agents_practice) is connected, authentication works, and [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) is open.
+- [x] GitHub target resolved: [Abe-Borg/managed_agents_practice](https://github.com/Abe-Borg/managed_agents_practice) is connected, authentication works, and [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) is merged.
 - [ ] Phase 2: does the API accept `limited` networking with `allowed_hosts=[]`? The [Environment docs](https://platform.claude.com/docs/en/managed-agents/environments) describe the fields but do not specify empty-list acceptance. Verify with `uv run csv-analyst setup` when a key is available; if rejected, use the plan's documented unrestricted fallback and record the result.
 - [ ] Phase 4: replace the unskilled-report heading absence check with a deterministic version and skill-use check; model output alone cannot guarantee an omitted heading (plan §8, Phase 4).
 - [ ] Phase 5: strengthen the isolation check; concurrently listing markers before writing can pass even with a shared filesystem (plan §5.5 and Phase 5).
@@ -41,4 +41,4 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 2: Environment + saved Agent (`setup`). First task: open the Phase 2 PR, then run the live setup check when an API key is available. Blockers: live acceptance requires an API key, which is absent from this environment.
+Phase 2: review [PR #2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) and run the live setup check when an API key is available. Phase 3 begins after PR #2 merges. Live acceptance requires an API key, which is absent from this environment.
