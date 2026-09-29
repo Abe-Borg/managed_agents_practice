@@ -11,7 +11,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
-| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | 🚧 in progress | — | 2026-09-29 | `ask`, deduplicated `tail`, guarded `cleanup`, and `sessions` implemented; live verification pending (no key in agent env). |
+| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | 🔍 in review | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | `ask`, deduplicated `tail`, guarded `cleanup`, and `sessions`; 66 offline tests passed. Live verification pending (no key in agent env). |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
 
@@ -110,4 +110,4 @@ The separate opt-in automated Phase 6 check is `$env:CSV_ANALYST_LIVE = '1'; uv 
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 6: review its PR and run the pending Phase 2–6 live acceptance when an API key is available locally. Phase 7 starts only after the Phase 6 PR merges.
+Phase 6: review [PR #6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) and run the pending Phase 2–6 live acceptance when an API key is available locally. Phase 7 starts only after PR #6 merges.
