@@ -356,7 +356,10 @@ class SdkSessionPlatform:
         )
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
-        session = await self._client.beta.sessions.retrieve(session_id)
+        try:
+            session = await self._client.beta.sessions.retrieve(session_id)
+        except NotFoundError as exc:
+            raise PlatformNotFound(session_id) from exc
         return self._session_info(session)
 
     @staticmethod

@@ -43,6 +43,7 @@ from csv_analyst.runner import (
     ask_session,
     cleanup_run,
     resume_budget_session,
+    session_artifact_dir,
     tail_session,
 )
 
@@ -402,6 +403,7 @@ def raise_budget(
             input_name = title.removeprefix("csv-analyst: ")
             if Path(input_name).name != input_name or not input_name.endswith(".csv"):
                 raise ValueError("Session title has an invalid CSV filename")
+            destination = session_artifact_dir(session)
             with Live(
                 _progress_table("resuming", "", session.list_cost_cents),
                 console=console,
@@ -426,7 +428,6 @@ def raise_budget(
                 )
             if result.status != "completed":
                 return result, None
-            destination = Path("runs") / f"resumed-{session_id}" / Path(input_name).stem
             collected = await collect(platform, session_id, destination, input_name)
             return result, collected.directory
         finally:

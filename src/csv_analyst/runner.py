@@ -12,7 +12,7 @@ from typing import Any, Literal
 
 from csv_analyst.events import ProgressEvent, is_terminal, normalize
 from csv_analyst.outputs import collect_followup, next_followup_index
-from csv_analyst.platform import SessionInfo, SessionPlatform
+from csv_analyst.platform import PlatformNotFound, SessionInfo, SessionPlatform
 from csv_analyst.prompts import build_followup_message, build_user_message
 
 RunStatus = Literal["completed", "paused_budget", "requires_action", "failed"]
@@ -46,6 +46,15 @@ def session_artifact_dir(session: SessionInfo, root: Path = Path("runs")) -> Pat
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.csv", input_name):
         raise ValueError("Session title has an invalid CSV filename")
     return root / run_id / Path(input_name).stem
+
+
+def _local_artifact_dirs(session: SessionInfo, root: Path) -> tuple[Path, ...]:
+    """Include the Phase 5 resume folder for sessions completed before this fix."""
+    primary = session_artifact_dir(session, root)
+    if re.fullmatch(r"[A-Za-z0-9_-]+", session.id) is None:
+        return (primary,)
+    legacy = root / f"resumed-{session.id}" / primary.name
+    return (primary, legacy)
 
 
 async def run_session(
@@ -342,6 +351,7 @@ async def tail_session(
     """Open the stream before history and render every persisted ID once."""
     stream = await platform.open_event_stream(session_id)
     seen: set[str] = set()
+    history: list[dict[str, Any]] = []
 
     def emit(raw: dict[str, Any]) -> None:
         progress = normalize(raw, session_id=session_id, label=session_id)
@@ -368,16 +378,39 @@ async def tail_session(
         sink(progress)
 
     try:
+
+        def emit_unseen(events: list[dict[str, Any]]) -> None:
+            for raw in events:
+                event_id = raw.get("id")
+                if not isinstance(event_id, str) or event_id in seen:
+                    continue
+                seen.add(event_id)
+                emit(raw)
+
         history = await platform.list_events(session_id)
-        for raw in history:
-            event_id = raw.get("id")
-            if not isinstance(event_id, str) or event_id in seen:
-                continue
-            seen.add(event_id)
-            emit(raw)
+        emit_unseen(history)
         session = await platform.retrieve_session(session_id)
         if session.status == "terminated" or (session.status == "idle" and not follow):
-            return
+            # The turn may have idled after the first history snapshot. Fetch once
+            # more before deciding whether the already-open stream needs draining.
+            history = await platform.list_events(session_id)
+            emit_unseen(history)
+            transitions = [
+                raw.get("type")
+                for raw in history
+                if raw.get("type")
+                in {
+                    "user.message",
+                    "session.status_running",
+                    "session.status_idle",
+                    "session.status_terminated",
+                }
+            ]
+            if not transitions or transitions[-1] in {
+                "session.status_idle",
+                "session.status_terminated",
+            }:
+                return
         async for raw in stream:
             event_id = raw.get("id")
             if not isinstance(event_id, str) or event_id in seen:
@@ -401,26 +434,47 @@ class CleanupOutcome:
 
 
 def _outputs_complete(
-    destination: Path, remote_names: set[str], history: list[dict[str, Any]]
+    destinations: tuple[Path, ...],
+    remote_names: set[str],
+    history: list[dict[str, Any]],
 ) -> bool:
     """Require one locally complete output set for every submitted turn."""
+
+    def local_file(name: str) -> Path | None:
+        return next(
+            (
+                path
+                for directory in destinations
+                if (path := directory / name).is_file() and not path.is_symlink()
+            ),
+            None,
+        )
+
     if not remote_names or any(Path(name).name != name for name in remote_names):
         return False
     if not {"report.md", "analysis.py", "manifest.json"} <= remote_names:
         return False
-    if not all((destination / name).is_file() for name in remote_names):
+    if not all(local_file(name) is not None for name in remote_names):
         return False
-    followup_manifests = sorted(destination.glob("followup_*_manifest.json"))
+    followup_manifests = {
+        path.name: path
+        for directory in reversed(destinations)
+        for path in directory.glob("followup_*_manifest.json")
+        if path.is_file() and not path.is_symlink()
+    }
     turn_count = sum(event.get("type") == "user.message" for event in history)
     if turn_count != 1 + len(followup_manifests):
         return False
     try:
-        base = json.loads((destination / "manifest.json").read_text(encoding="utf-8"))
+        base_path = local_file("manifest.json")
+        if base_path is None:
+            return False
+        base = json.loads(base_path.read_text(encoding="utf-8"))
         charts = base.get("charts") if isinstance(base, dict) else None
         if not isinstance(charts, list) or not charts:
             return False
         manifests: list[tuple[str, object]] = [("manifest.json", charts)]
-        for manifest in followup_manifests:
+        for manifest in followup_manifests.values():
             data = json.loads(manifest.read_text(encoding="utf-8"))
             names = data.get("files") if isinstance(data, dict) else None
             manifests.append((manifest.name, names))
@@ -430,7 +484,7 @@ def _outputs_complete(
             if not all(
                 isinstance(name, str)
                 and name in remote_names
-                and (destination / name).is_file()
+                and local_file(name) is not None
                 for name in names
             ):
                 return False
@@ -469,7 +523,15 @@ async def cleanup_run(
     outcomes: list[CleanupOutcome] = []
     for session_id in identifiers:
         assert isinstance(session_id, str)
-        session = await platform.retrieve_session(session_id)
+        try:
+            session = await platform.retrieve_session(session_id)
+        except PlatformNotFound:
+            outcomes.append(
+                CleanupOutcome(
+                    session_id, "already_removed", "session no longer exists"
+                )
+            )
+            continue
         metadata = session.metadata or {}
         if metadata.get("app") != "csv-analyst" or metadata.get("run_id") != run_id:
             outcomes.append(CleanupOutcome(session_id, "skipped", "foreign metadata"))
@@ -485,11 +547,11 @@ async def cleanup_run(
             continue
         if delete:
             try:
-                destination = session_artifact_dir(session, output_root)
+                destinations = _local_artifact_dirs(session, output_root)
                 remote_files = await platform.list_output_files(session_id)
                 names = {file.filename for file in remote_files}
                 history = await platform.list_events(session_id)
-                if not _outputs_complete(destination, names, history):
+                if not _outputs_complete(destinations, names, history):
                     raise ValueError("local outputs are missing or incomplete")
             except ValueError as exc:
                 outcomes.append(CleanupOutcome(session_id, "skipped", str(exc)))

@@ -11,7 +11,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
-| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | 🔍 in review | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | `ask`, deduplicated `tail`, guarded `cleanup`, and `sessions`; 66 offline tests passed. Live verification pending (no key in agent env). |
+| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | 🔍 in review | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | `ask`, deduplicated `tail`, guarded `cleanup`, and `sessions`; 71 offline tests passed after review fixes. Live verification pending (no key in agent env). |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
 
@@ -40,6 +40,9 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 6): Require each follow-up to write a numbered manifest last, listing its new flat outputs. This application convention makes delayed output collection deterministic and avoids overwriting earlier artifacts; it is not a Managed Agents API field.
 - 2026-09-29 (Phase 6): `--delete` checks every remote output against the local folder and requires a complete local manifest for every submitted turn; archiving remains the default. This guards against output-listing lag and incomplete follow-ups.
 - 2026-09-29 (Phase 6): `tail --follow` continues across idle turns; the default exits after current history if already idle, or at the next terminal idle event if running.
+- 2026-09-29 (Phase 6 review): Re-read history before an idle `tail` exits and drain its already-open stream if the terminal event is not persisted yet, so the idle transition cannot omit buffered events — [PR #6 review](https://github.com/Abe-Borg/managed_agents_practice/pull/6#discussion_r4137349660).
+- 2026-09-29 (Phase 6 review): Save newly resumed artifacts in the original run folder and also recognize the older `resumed-<session_id>` folder during guarded deletion — [PR #6 review](https://github.com/Abe-Borg/managed_agents_practice/pull/6#discussion_r4137349674).
+- 2026-09-29 (Phase 6 review): Treat an already deleted recorded session as an `already_removed` outcome and continue cleanup for the other sessions — [PR #6 review](https://github.com/Abe-Borg/managed_agents_practice/pull/6#discussion_r4137349683).
 
 - 2026-09-29 (Phase 5): Confirmed [Phase 4 PR #4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) merged at 2026-09-29 10:43 PT (`ae8fe1a`) before Phase 5 work.
 - 2026-09-29 (Phase 5): Use one run-wide exclusive-create marker in each sandbox to avoid the pre-write marker race; reject duplicate input stems before work starts.

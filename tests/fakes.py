@@ -162,6 +162,7 @@ class FakeSessionPlatform:
         self.session_title = "csv-analyst: tiny.csv"
         self.session_metadata = {"app": "csv-analyst", "run_id": "run_1"}
         self.sent_message: str | None = None
+        self.missing_sessions: set[str] = set()
 
     async def close(self) -> None:
         self.calls.append("platform.close")
@@ -221,6 +222,8 @@ class FakeSessionPlatform:
         self.calls.append("events.send_interrupt")
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
+        if session_id in self.missing_sessions:
+            raise PlatformNotFound(session_id)
         return SessionInfo(
             session_id,
             self.session_status,

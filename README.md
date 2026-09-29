@@ -67,7 +67,7 @@ uv run csv-analyst run fixtures/sales.csv --budget-cents 5
 uv run csv-analyst raise-budget <session_id> --to-cents 100
 ```
 
-Use the session ID printed by the first command. The new cap must exceed the session's consumed list cost by more than one cent. Raising it resumes the paused work without another message. The second command downloads completed artifacts under `runs/resumed-<session_id>/sales/`.
+Use the session ID printed by the first command. The new cap must exceed the session's consumed list cost by more than one cent. Raising it resumes the paused work without another message. The second command downloads completed artifacts into the original `runs/<run_id>/sales/` folder. Cleanup also recognizes the older `runs/resumed-<session_id>/sales/` location for sessions resumed before this change.
 
 ## Continue and manage sessions
 
