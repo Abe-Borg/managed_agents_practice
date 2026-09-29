@@ -10,7 +10,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
-| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | 🚧 in progress | — | 2026-09-29 | Parallel runs, exclusive marker isolation, summaries, and budget resume in progress. Live verification pending (key presence unverified). |
+| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | 🔍 in review | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Parallel runs, exclusive marker isolation, summaries, and budget resume; 55 offline tests passed. Live verification pending (local runner unavailable; key presence unverified). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
@@ -54,10 +54,24 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - [ ] Phase 8: resolve the completion banner timing conflict: the notice requires every phase marked done, while Phase 8 says to show it while Phase 8 remains in review (plan completion notice, Phase 8, and §9).
 
 - [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service when the local runner and API key are available.
+- [ ] Phase 5 live: confirm three overlapping sessions with isolation passes, then a 5-cent budget pause and 100-cent resume; record measured costs.
 - [ ] Local checkout: update original `main` from origin when the desktop command runner is available; a fresh Phase 5 worktree and GitHub branch were created from verified merge commit `ae8fe1a`.
+
+## Phase 5 live commands (pending)
+
+With a locally configured API key:
+
+```powershell
+uv run csv-analyst setup
+uv run csv-analyst run fixtures/sales.csv fixtures/weather.csv fixtures/web_traffic.csv --max-parallel 3
+uv run csv-analyst run fixtures/sales.csv --budget-cents 5
+uv run csv-analyst raise-budget <session_id_from_previous_command> --to-cents 100
+```
+
+The opt-in automated checks are `$env:CSV_ANALYST_LIVE = '1'` followed by `uv run pytest -m live tests/live/test_live_parallel.py -s`. They create four additional budgeted sessions.
 
 ## Measured costs
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 5: finish offline checks, open one PR against main, and run the four Phase 5 live sessions when a local API key and command runner are available. Do not start Phase 6.
+Phase 5: review [PR #5](https://github.com/Abe-Borg/managed_agents_practice/pull/5), restore local command access and sync original `main`, then run the Phase 5 live checks and record costs. Phase 6 starts only after PR #5 merges.
