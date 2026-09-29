@@ -45,7 +45,7 @@ def _validate_manifest(data: Any, input_name: str) -> list[str]:
             raise OutputError(f"manifest.json has an invalid {field}")
     if not isinstance(data.get("summary"), str):
         raise OutputError("manifest.json has no summary")
-    if "skill_used" in data and type(data["skill_used"]) is not bool:
+    if type(data.get("skill_used")) is not bool:
         raise OutputError("manifest.json has an invalid skill_used flag")
     charts = data.get("charts")
     if (
