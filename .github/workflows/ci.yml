@@ -38,7 +38,7 @@ jobs:
         run: uv run ruff check .
 
       - name: Format
-        run: uv run ruff format --check .
+        run: uv run ruff format --diff .
 
       - name: Type check
         run: uv run mypy src
