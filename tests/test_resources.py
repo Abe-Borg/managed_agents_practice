@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import shutil
 from dataclasses import replace
 from pathlib import Path
-import shutil
 
 import pytest
 from typer.testing import CliRunner
