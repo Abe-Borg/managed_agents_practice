@@ -38,6 +38,7 @@ def test_run_command_downloads_artifacts_with_fake_session(
                 "columns": 1,
                 "charts": ["chart_01_values.png"],
                 "summary": "Tiny data",
+                "skill_used": True,
             }
         ).encode(),
     }
