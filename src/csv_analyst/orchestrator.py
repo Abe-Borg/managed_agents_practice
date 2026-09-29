@@ -12,7 +12,7 @@ from typing import Any
 
 from csv_analyst.events import ProgressEvent
 from csv_analyst.outputs import OutputError, collect
-from csv_analyst.platform import SessionPlatform
+from csv_analyst.platform import SessionPlatform, user_facing_error
 from csv_analyst.runner import run_session
 
 
@@ -175,7 +175,7 @@ async def run_many(
                 )
                 isolation = False if reason == "isolation_failed" else None
             except Exception as exc:
-                error = f"{type(exc).__name__}: {exc}"
+                error = f"{type(exc).__name__}: {user_facing_error(exc)}"
             finally:
                 if platform is not None:
                     try:

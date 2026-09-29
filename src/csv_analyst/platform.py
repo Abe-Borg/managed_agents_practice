@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -11,9 +12,11 @@ from anthropic import (
     Anthropic,
     AsyncAnthropic,
     AsyncStream,
+    AuthenticationError,
     BadRequestError,
     ConflictError,
     NotFoundError,
+    RateLimitError,
 )
 from anthropic.lib import files_from_dir
 from anthropic.types.beta.sessions import BetaManagedAgentsStreamSessionEvents
@@ -31,6 +34,31 @@ class PlatformConflict(Exception):
 
 class PlatformValidationError(Exception):
     """The API rejected a resource specification."""
+
+
+class PlatformArchivedAgent(PlatformValidationError):
+    """The saved Agent can no longer start sessions."""
+
+
+def user_facing_error(exc: Exception) -> str:
+    """Give actionable API errors without copying request bodies or credentials."""
+    if isinstance(exc, AuthenticationError):
+        return "API key was rejected (401). Check ANTHROPIC_API_KEY in your environment or ignored .env."
+    if isinstance(exc, RateLimitError):
+        retry_after = exc.response.headers.get("retry-after")
+        if retry_after:
+            return f"API rate limit reached (429). Retry after {retry_after} seconds."
+        return (
+            "API returned 429 without Retry-After. A monthly spend cap may be "
+            "exhausted; check Claude Console limits before retrying."
+        )
+    if isinstance(exc, BadRequestError):
+        return "API rejected the request (400). Budgets must be whole USD cents; check the command and saved resources."
+    if isinstance(exc, ConflictError):
+        return "Resource changed concurrently (409). Re-run csv-analyst setup."
+    if isinstance(exc, (PlatformValidationError, PlatformConflict, ValueError)):
+        return str(exc)
+    return type(exc).__name__
 
 
 @dataclass(frozen=True)
@@ -87,7 +115,8 @@ class SdkPlatform:
     """Only this module calls the Anthropic SDK."""
 
     def __init__(self, api_key: str) -> None:
-        self._client = Anthropic(api_key=api_key)
+        # The SDK backs off on 429s. Bound retries so a spend-cap 429 cannot spin.
+        self._client = Anthropic(api_key=api_key, max_retries=1)
 
     def create_environment(self, spec: EnvironmentSpec) -> EnvironmentInfo:
         try:
@@ -208,6 +237,7 @@ class SessionInfo:
     list_cost_cents: int | None = None
     active_seconds: float | None = None
     metadata: dict[str, str] | None = None
+    created_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -281,7 +311,7 @@ class SdkSessionPlatform:
     """Async file, session, and event methods used by the runner."""
 
     def __init__(self, api_key: str) -> None:
-        self._client = AsyncAnthropic(api_key=api_key)
+        self._client = AsyncAnthropic(api_key=api_key, max_retries=1)
 
     async def close(self) -> None:
         await self._client.close()
@@ -327,7 +357,22 @@ class SdkSessionPlatform:
                 "type": "limit",
                 "max_list_cost": {"amount": str(budget_cents), "currency": "USD"},
             }
-        session = await self._client.beta.sessions.create(**fields)
+        try:
+            session = await self._client.beta.sessions.create(**fields)
+        except (BadRequestError, NotFoundError) as exc:
+            try:
+                saved_agent = await self._client.beta.agents.retrieve(agent_id)
+            except Exception:
+                raise PlatformValidationError(
+                    "Session creation failed. Re-run csv-analyst setup and try again."
+                ) from exc
+            if saved_agent.archived_at is not None:
+                raise PlatformArchivedAgent(
+                    "Saved Agent is archived. Re-run csv-analyst setup and try again."
+                ) from exc
+            raise PlatformValidationError(
+                "Session creation failed. Check the budget and saved resources."
+            ) from exc
         resolved = cast(Any, session.agent)
         skills = resolved.skills or []
         return SessionInfo(
@@ -389,6 +434,7 @@ class SdkSessionPlatform:
                 else None
             ),
             metadata=dict(session.metadata),
+            created_at=session.created_at,
         )
 
     async def update_session_budget(self, session_id: str, to_cents: int) -> None:

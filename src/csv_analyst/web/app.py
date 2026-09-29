@@ -139,7 +139,9 @@ def create_app(
     environment = environment_id or (saved.environment_id if saved else None)
     if platform_factory is None:
         if config.api_key is None:
-            raise ValueError("ANTHROPIC_API_KEY is not set")
+            raise ValueError(
+                "ANTHROPIC_API_KEY is not set; add it to the environment or ignored .env"
+            )
 
         def platform_factory() -> SessionPlatform:
             return SdkSessionPlatform(config.api_key or "")

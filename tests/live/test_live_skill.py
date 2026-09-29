@@ -25,10 +25,10 @@ def _run_tiny(*options: str) -> tuple[str, Path]:
     return result.output, created.pop()
 
 
-@pytest.mark.live
+@pytest.mark.live_extra
 def test_skill_version_pin_and_session_model_override() -> None:
-    if os.environ.get("CSV_ANALYST_LIVE") != "1":
-        pytest.skip("Set CSV_ANALYST_LIVE=1 to run the live Skill check")
+    if os.environ.get("CSV_ANALYST_LIVE_EXTRA") != "1":
+        pytest.skip("Set CSV_ANALYST_LIVE_EXTRA=1 for additional live calls")
     if load_settings().api_key is None:
         pytest.skip("No ANTHROPIC_API_KEY available")
 

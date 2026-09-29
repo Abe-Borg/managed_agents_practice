@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
-from csv_analyst.platform import OutputFileInfo
+from csv_analyst.platform import OutputFileInfo, SessionInfo
 from csv_analyst.runner import ask_session
 from tests.fakes import FakeSessionPlatform
 
@@ -19,6 +20,25 @@ async def test_ask_rejects_running_session_before_sending(tmp_path: Path) -> Non
             platform, "sesn_fake", "Summarize", timeout_s=10, output_root=tmp_path
         )
     assert "stream.open" not in platform.calls
+    assert platform.sent_message is None
+
+
+@pytest.mark.asyncio
+async def test_ask_explains_expired_sandbox_before_sending(tmp_path: Path) -> None:
+    class OldSessionPlatform(FakeSessionPlatform):
+        async def retrieve_session(self, session_id: str) -> SessionInfo:
+            original = await super().retrieve_session(session_id)
+            return SessionInfo(
+                original.id,
+                original.status,
+                created_at=datetime.now(UTC) - timedelta(days=31),
+            )
+
+    platform = OldSessionPlatform()
+    with pytest.raises(ValueError, match="30 days old"):
+        await ask_session(
+            platform, "sesn_fake", "Summarize", timeout_s=10, output_root=tmp_path
+        )
     assert platform.sent_message is None
 
 

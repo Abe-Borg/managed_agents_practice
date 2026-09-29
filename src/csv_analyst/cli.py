@@ -12,6 +12,7 @@ from typing import Annotated
 from uuid import uuid4
 
 import typer
+from anthropic import APIStatusError
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
@@ -29,6 +30,7 @@ from csv_analyst.platform import (
     SdkPlatform,
     SdkSessionPlatform,
     SessionInfo,
+    user_facing_error,
 )
 from csv_analyst.resources import (
     SKILL_DIR,
@@ -86,7 +88,10 @@ def _configured_settings() -> Settings:
         typer.echo(f"Configuration error: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     if settings.api_key is None:
-        typer.echo("ANTHROPIC_API_KEY is not set; configure .env first.", err=True)
+        typer.echo(
+            "ANTHROPIC_API_KEY is not set. Add it to your environment or ignored .env; run csv-analyst doctor to check.",
+            err=True,
+        )
         raise typer.Exit(code=2)
     return settings
 
@@ -118,8 +123,13 @@ def setup() -> None:
         agent = ensure_agent(
             platform, build_agent_spec(settings, skill_id=skill.resource.id)
         )
-    except (PlatformConflict, PlatformValidationError, ValueError) as exc:
-        typer.echo(f"Setup failed: {exc}", err=True)
+    except (
+        APIStatusError,
+        PlatformConflict,
+        PlatformValidationError,
+        ValueError,
+    ) as exc:
+        typer.echo(f"Setup failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=2) from exc
 
     typer.echo(f"Environment: {environment.resource.id} ({environment.action})")
@@ -160,7 +170,12 @@ def resources() -> None:
     table = Table(title="Agent versions")
     table.add_column("Version")
     table.add_column("Updated")
-    for version_info in platform.list_agent_versions(state.agent_id):
+    try:
+        versions = platform.list_agent_versions(state.agent_id)
+    except APIStatusError as exc:
+        typer.echo(f"Resources failed: {user_facing_error(exc)}", err=True)
+        raise typer.Exit(code=1) from exc
+    for version_info in versions:
         table.add_row(str(version_info.version), version_info.updated_at)
     console.print(table)
 
@@ -342,11 +357,17 @@ def run(
 
     try:
         summary = asyncio.run(execute())
+    except KeyboardInterrupt as exc:
+        typer.echo(
+            "Interrupted. Running Managed Agents sessions were sent user.interrupt.",
+            err=True,
+        )
+        raise typer.Exit(code=130) from exc
     except (ValueError, OutputError) as exc:
         typer.echo(f"Run failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        typer.echo(f"Run failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Run failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
 
     _show_summary(console, summary)
@@ -435,11 +456,16 @@ def raise_budget(
 
     try:
         result, artifacts = asyncio.run(execute())
+    except KeyboardInterrupt as exc:
+        typer.echo(
+            "Interrupted. The running session was sent user.interrupt.", err=True
+        )
+        raise typer.Exit(code=130) from exc
     except (ValueError, OutputError) as exc:
         typer.echo(f"Raise budget failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        typer.echo(f"Raise budget failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Raise budget failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
     console.print(f"Session: {session_id}")
     console.print(f"Status: {result.status} ({result.stop_reason})")
@@ -490,11 +516,16 @@ def ask(
 
     try:
         result, files = asyncio.run(execute())
+    except KeyboardInterrupt as exc:
+        typer.echo(
+            "Interrupted. The running session was sent user.interrupt.", err=True
+        )
+        raise typer.Exit(code=130) from exc
     except (ValueError, OutputError) as exc:
         typer.echo(f"Ask failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        typer.echo(f"Ask failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Ask failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
     console.print(f"Session: {session_id}")
     console.print(f"Status: {result.status} ({result.stop_reason})")
@@ -536,7 +567,7 @@ def tail(
     try:
         asyncio.run(execute())
     except Exception as exc:
-        typer.echo(f"Tail failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Tail failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
 
 
@@ -566,7 +597,7 @@ def cleanup(
         typer.echo(f"Cleanup failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        typer.echo(f"Cleanup failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Cleanup failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
     table = Table(title="Session cleanup")
     for heading in ("Session", "Action", "Detail"):
@@ -606,7 +637,7 @@ def list_sessions(
     try:
         recent = asyncio.run(execute())
     except Exception as exc:
-        typer.echo(f"Sessions failed: {type(exc).__name__}", err=True)
+        typer.echo(f"Sessions failed: {user_facing_error(exc)}", err=True)
         raise typer.Exit(code=1) from exc
     table = Table(title="Recent sessions")
     for heading in ("Session", "Status", "Title"):
