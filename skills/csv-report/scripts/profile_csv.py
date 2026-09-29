@@ -17,6 +17,8 @@ def profile_csv(path: Path) -> dict[str, object]:
         columns = reader.fieldnames
         if not columns:
             raise ValueError("CSV has no header")
+        if len(columns) != len(set(columns)):
+            raise ValueError("CSV has duplicate header names")
         rows = list(reader)
 
     values: dict[str, list[str]] = {name: [] for name in columns}
