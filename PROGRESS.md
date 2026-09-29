@@ -40,7 +40,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 5): Confirmed [Phase 4 PR #4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) merged at 2026-09-29 10:43 PT (`ae8fe1a`) before Phase 5 work.
 - 2026-09-29 (Phase 5): Use one run-wide exclusive-create marker in each sandbox to avoid the pre-write marker race; reject duplicate input stems before work starts.
 - 2026-09-29 (Phase 5): Follow the documented automatic resume on budget update; do not send a new message at the cap. Require a new cap greater than reported consumed cents plus one.
-- 2026-09-29 (Phase 5): Desktop command and computer-use runners failed before launch. A fresh worktree was created from the verified merged main commit, while original local main remains unverified and unsynced.
+- 2026-09-29 (Phase 5): Desktop command and computer-use runners failed before launch. A worktree was created from ref `main`, but its checkout SHA could not be verified; original local `main` remains unverified and unsynced. The GitHub Phase 5 branch started from verified merge commit `ae8fe1a`.
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
@@ -55,7 +55,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 
 - [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service when the local runner and API key are available.
 - [ ] Phase 5 live: confirm three overlapping sessions with isolation passes, then a 5-cent budget pause and 100-cent resume; record measured costs.
-- [ ] Local checkout: update original `main` from origin when the desktop command runner is available; a fresh Phase 5 worktree and GitHub branch were created from verified merge commit `ae8fe1a`.
+- [ ] Local checkout: update original `main` from origin when the desktop command runner is available; the GitHub branch was created from verified merge commit `ae8fe1a`; the new worktree checkout SHA is unverified.
 
 ## Phase 5 live commands (pending)
 
