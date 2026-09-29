@@ -12,7 +12,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ✅ done | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | Merged as `fbcca9288f53de29e581ef45977089c452eb6afd`; 71 offline tests passed. Live verification pending (no key in agent env). |
-| 7 | Local web UI with live SSE | 🚧 in progress | — | 2026-09-29 | Local FastAPI UI, normalized SSE replay, safe uploads and artifacts, follow-up and budget endpoints. Live verification pending (no key in agent env). |
+| 7 | Local web UI with live SSE | 🔍 in review | [#7](https://github.com/Abe-Borg/managed_agents_practice/pull/7) | 2026-09-29 | Local FastAPI UI, normalized SSE replay, safe uploads and artifacts, follow-up and budget endpoints; 79 offline tests passed. Live verification pending (no key in agent env). |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
 
 Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocked
@@ -130,4 +130,4 @@ Open `http://127.0.0.1:8765`, choose `fixtures/sales.csv`, `fixtures/weather.csv
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 7: finish offline checks, open one PR against `main`, and leave it for review. Phase 2–7 live acceptance remains pending until a local API key is available. Do not start Phase 8.
+Phase 7: review [PR #7](https://github.com/Abe-Borg/managed_agents_practice/pull/7). Phase 2–7 live acceptance remains pending until a local API key is available. Do not start Phase 8.
