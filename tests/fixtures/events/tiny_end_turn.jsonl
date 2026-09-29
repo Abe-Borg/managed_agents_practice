@@ -1,0 +1,6 @@
+{"id":"evt_1","type":"session.status_running","processed_at":"2026-09-28T00:00:00Z"}
+{"id":"evt_2","type":"agent.tool_use","name":"bash","input":{"command":"python3 /mnt/session/outputs/analysis.py"},"processed_at":"2026-09-28T00:00:01Z"}
+{"id":"evt_3","type":"agent.tool_result","tool_use_id":"evt_2","content":[{"type":"text","text":"10 rows"}],"processed_at":"2026-09-28T00:00:02Z"}
+{"id":"evt_4","type":"agent.message","content":[{"type":"text","text":"Report and chart are ready."}],"processed_at":"2026-09-28T00:00:03Z"}
+{"id":"evt_5","type":"session.usage","usage":{"list_cost":{"amount":"3","currency":"USD"},"active_seconds":3.0},"processed_at":"2026-09-28T00:00:04Z"}
+{"id":"evt_6","type":"session.status_idle","stop_reason":{"type":"end_turn"},"processed_at":"2026-09-28T00:00:05Z"}

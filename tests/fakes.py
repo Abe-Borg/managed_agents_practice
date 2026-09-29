@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 from csv_analyst.agent_spec import AgentSpec, EnvironmentSpec, config_hash
 from csv_analyst.platform import (
     AgentInfo,
     AgentVersionInfo,
     EnvironmentInfo,
+    OutputFileInfo,
     PlatformConflict,
     PlatformNotFound,
+    SessionInfo,
 )
 
 
@@ -98,3 +102,76 @@ class FakePlatform:
             AgentVersionInfo(version, f"2026-09-28T00:00:0{version}Z")
             for version in range(1, record.version + 1)
         ]
+
+
+class FakeEventStream:
+    def __init__(self, events: list[dict[str, Any]], calls: list[str]) -> None:
+        self.events = events
+        self.calls = calls
+
+    async def __aiter__(self):
+        for event in self.events:
+            yield event
+
+    async def close(self) -> None:
+        self.calls.append("stream.close")
+
+
+class FakeSessionPlatform:
+    def __init__(self, events: list[dict[str, Any]] | None = None) -> None:
+        self.events = events or []
+        self.calls: list[str] = []
+        self.budget_cents: int | None = None
+        self.output_schedule: list[list[OutputFileInfo]] = []
+        self.output_payloads: dict[str, bytes] = {}
+        self.list_calls = 0
+
+    async def close(self) -> None:
+        self.calls.append("platform.close")
+
+    async def upload_file(self, path: Path) -> str:
+        self.calls.append("upload")
+        return "file_input"
+
+    async def create_session(
+        self,
+        agent_id: str,
+        environment_id: str,
+        file_id: str,
+        input_name: str,
+        budget_cents: int | None,
+        run_id: str,
+    ) -> SessionInfo:
+        self.calls.append("session.create")
+        self.budget_cents = budget_cents
+        return SessionInfo("sesn_fake", "pending")
+
+    async def open_event_stream(self, session_id: str) -> FakeEventStream:
+        self.calls.append("stream.open")
+        return FakeEventStream(self.events, self.calls)
+
+    async def send_message(self, session_id: str, message: str) -> None:
+        self.calls.append("events.send_message")
+
+    async def send_interrupt(self, session_id: str) -> None:
+        self.calls.append("events.send_interrupt")
+
+    async def retrieve_session(self, session_id: str) -> SessionInfo:
+        return SessionInfo(session_id, "idle")
+
+    async def archive_session(self, session_id: str) -> SessionInfo:
+        return SessionInfo(session_id, "archived")
+
+    async def list_events(self, session_id: str) -> list[dict[str, Any]]:
+        return self.events
+
+    async def list_output_files(self, session_id: str) -> list[OutputFileInfo]:
+        self.list_calls += 1
+        if not self.output_schedule:
+            return []
+        index = min(self.list_calls - 1, len(self.output_schedule) - 1)
+        return self.output_schedule[index]
+
+    async def download_file(self, file_id: str, dest: Path) -> None:
+        self.calls.append(f"file.download:{file_id}")
+        dest.write_bytes(self.output_payloads[file_id])

@@ -7,8 +7,8 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | # | Phase | Status | PR | Date (PT) | Notes |
 |---|-------|--------|----|-----------|-------|
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
-| 2 | Environment + saved Agent (`setup`) | 🔍 in review | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | API docs and SDK signatures re-verified; 23 offline tests pass, including archive retry. Live verification pending (no key in agent env). |
-| 3 | First session end-to-end (file in → stream → artifacts out, budget) | ⬜ todo | — | — | — |
+| 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
+| 3 | First session end-to-end (file in → stream → artifacts out, budget) | 🔍 in review | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-28 | Docs and async SDK verified; 33 offline tests pass, including retry recovery. Live verification pending (no key in agent env). |
 | 4 | Custom Skill + agent versioning + session overrides | ⬜ todo | — | — | — |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
@@ -26,6 +26,9 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-28 (Phase 2): Confirmed [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) merged at 2026-09-28 20:04 PT before starting Phase 2.
 - 2026-09-28 (Phase 2): If the API rejects `limited` networking with no allowed hosts, retry with the plan's documented `unrestricted` fallback, record that mode in local state, and show it in CLI output. This preserves idempotence while leaving the server's empty-list behavior for a live check.
 - 2026-09-28 (Phase 2): Keep the previous Environment ID in pending cleanup state until archive succeeds, so a failed archive is retried without creating another Environment — [PR #2 review](https://github.com/Abe-Borg/managed_agents_practice/pull/2#discussion_r4129296417).
+- 2026-09-28 (Phase 3): Confirmed [Phase 2 PR #2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) merged at 2026-09-28 20:46 PT before starting Phase 3.
+- 2026-09-28 (Phase 3): Used synthetic event JSONL fixtures for offline coverage because no API key is available to record a real stream; the opt-in live test and `--record-events` command will verify real event shapes later.
+- 2026-09-29 (Phase 3 review): Treat a final `end_turn` as completed even when earlier `session.error` events were retrying; retain those errors as diagnostics so recovered sessions still collect artifacts — [PR #3 review](https://github.com/Abe-Borg/managed_agents_practice/pull/3#discussion_r4129502002).
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
@@ -42,4 +45,4 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 2: review [PR #2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) and run the live setup check when an API key is available. Phase 3 begins after PR #2 merges. Live acceptance requires an API key, which is absent from this environment.
+Phase 3: review [PR #3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) and run the live setup plus single-file smoke check when an API key is available. Phase 4 starts after PR #3 merges. No key is currently available in this environment.
