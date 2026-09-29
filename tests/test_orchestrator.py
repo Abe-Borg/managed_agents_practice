@@ -196,7 +196,9 @@ async def test_duplicate_session_ids_fail_isolation(
     from csv_analyst.runner import SessionResult
 
     async def fake_run(
-        _platform: FakeSessionPlatform, _path: Path, *_args: object,
+        _platform: FakeSessionPlatform,
+        _path: Path,
+        *_args: object,
         **_kwargs: object,
     ) -> SessionResult:
         return SessionResult("sesn_duplicate", "paused_budget", "budget_reached", 5, ())
