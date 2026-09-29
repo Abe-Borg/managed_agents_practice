@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>csv-analyst</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">LOCAL WORKSPACE · MANAGED AGENTS</div>
+      <h1>Turn CSVs into clear answers.</h1>
+      <p>Drop up to five files. Each one runs in its own sandbox, with live progress and a hard cost cap.</p>
+    </header>
+
+    <section class="upload-card" aria-label="Start an analysis">
+      <form id="run-form">
+        <label id="drop-zone" class="drop-zone" for="files">
+          <span class="drop-icon" aria-hidden="true">↥</span>
+          <strong>Drop CSV files here</strong>
+          <span>or click to choose · up to 5 files · 1 MB each</span>
+          <input id="files" name="files" type="file" accept=".csv,text/csv" multiple required>
+        </label>
+        <div id="selected-files" class="selected-files" aria-live="polite"></div>
+        <div class="form-row">
+          <label for="budget">Budget per session <span class="muted">(cents)</span></label>
+          <input id="budget" name="budget_cents" type="number" min="1" max="500" value="__DEFAULT_BUDGET__" required>
+          <button id="start" type="submit">Start analysis <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+      <p id="notice" class="notice" role="status"></p>
+    </section>
+
+    <section id="workspace" class="workspace" hidden>
+      <div class="workspace-head">
+        <div>
+          <div class="eyebrow">LIVE RUN</div>
+          <h2>Session workspace</h2>
+        </div>
+        <span id="run-id" class="run-id"></span>
+      </div>
+      <div id="isolation" class="isolation">Isolation check pending</div>
+      <div id="panels" class="panels"></div>
+    </section>
+  </main>
+</body>
+</html>

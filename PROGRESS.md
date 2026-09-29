@@ -11,8 +11,8 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
-| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | 🔍 in review | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | `ask`, deduplicated `tail`, guarded `cleanup`, and `sessions`; 71 offline tests passed after review fixes. Live verification pending (no key in agent env). |
-| 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
+| 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ✅ done | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | Merged as `fbcca9288f53de29e581ef45977089c452eb6afd`; 71 offline tests passed. Live verification pending (no key in agent env). |
+| 7 | Local web UI with live SSE | 🚧 in progress | — | 2026-09-29 | Local FastAPI UI, normalized SSE replay, safe uploads and artifacts, follow-up and budget endpoints. Live verification pending (no key in agent env). |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
 
 Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocked
@@ -48,6 +48,10 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 5): Use one run-wide exclusive-create marker in each sandbox to avoid the pre-write marker race; reject duplicate input stems before work starts.
 - 2026-09-29 (Phase 5): Follow the documented automatic resume on budget update; do not send a new message at the cap. Require a new cap greater than reported consumed cents plus one.
 - 2026-09-29 (Phase 5): Desktop command and computer-use runners failed before launch. A worktree was created from ref `main`, but its checkout SHA could not be verified; original local `main` remains unverified and unsynced. The GitHub Phase 5 branch started from verified merge commit `ae8fe1a`.
+- 2026-09-29 (Phase 7): Independently confirmed [PR #6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) merged as `fbcca9288f53de29e581ef45977089c452eb6afd`. Inspected the clean local checkout and fast-forwarded original `main` from `5de18ed` to that merge before creating `phase-7-local-web-ui`.
+- 2026-09-29 (Phase 7): Keep an in-process replay log of 10,000 normalized events per run, attach sequence IDs to browser SSE, and accept `Last-Event-ID` or an `after` cursor. Late subscribers see short completed runs; an expired explicit cursor returns 409 instead of silently skipping events. Replay ends when the local server restarts.
+- 2026-09-29 (Phase 7): Accept only one to five flat lowercase `.csv` filenames, at most 1 MB each, with distinct case-insensitive stems; serve only manifest-listed collected artifacts. Escape raw report HTML and rewrite only collected chart images to local artifact URLs.
+- 2026-09-29 (Phase 7): Keep the API key on the server and redact it and file IDs from browser-facing progress, summary, reports, and text artifacts. Reject cross-origin browser writes and bind the CLI server to `127.0.0.1`.
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
@@ -57,13 +61,15 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - [x] Phase 4: use resolved session Skill IDs and `manifest.skill_used` for the v1 comparison; report heading absence is not deterministic (plan §8, Phase 4).
 - [x] Phase 5: add a run-wide exclusive-create marker; in a shared filesystem only one session could create it, regardless of timing (plan §5.5 and Phase 5).
 - [x] Phase 5: reject case-insensitive duplicate CSV stems before creating sessions (plan §5.1 and Phase 5).
-- [ ] Phase 7: retain and replay run events for late SSE subscribers, including clients that connect after a short run completes (plan §8, Phase 7).
+- [x] Phase 7: retain and replay run events for late SSE subscribers, including clients that connect after a short run completes. The local server retains the newest 10,000 normalized events per run and rejects stale explicit cursors; see Phase 7 documentation checks and offline replay test.
 - [ ] Phase 8: resolve the completion banner timing conflict: the notice requires every phase marked done, while Phase 8 says to show it while Phase 8 remains in review (plan completion notice, Phase 8, and §9).
 
 - [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service when the local runner and API key are available.
 - [ ] Phase 5 live: confirm three overlapping sessions with isolation passes, then a 5-cent budget pause and 100-cent resume; record measured costs.
 - [x] Local checkout: original `main` was fast-forwarded from `4190f63` to verified Phase 5 merge `5de18ed` on 2026-09-29 PT.
 - [ ] Phase 6 live: confirm a follow-up actually reads the checkpointed `analysis.py`, numbered artifacts appear, `tail` returns complete history, and default cleanup archives sessions.
+- [x] Phase 7 checkout: original `main` fast-forwarded to verified PR #6 merge `fbcca9288f53de29e581ef45977089c452eb6afd` before branching.
+- [ ] Phase 7 live: use the local browser UI with three fixtures, observe concurrent panels, reports and charts, then ask a follow-up. No key was present in the local environment or `.env` during Phase 7 implementation.
 
 ## Phase 5 live commands (pending)
 
@@ -109,8 +115,19 @@ uv run csv-analyst cleanup --run <parallel_run_id>
 
 The separate opt-in automated Phase 6 check is `$env:CSV_ANALYST_LIVE = '1'; uv run pytest -m live tests/live/test_live_followup.py -s`. It creates one additional session capped at 100 cents and archives it after the checks.
 
+## Phase 7 live commands (pending; no key in agent env)
+
+With `ANTHROPIC_API_KEY` configured locally in the environment or ignored `.env`, run from the repository root:
+
+```powershell
+uv run csv-analyst setup
+uv run csv-analyst serve --port 8765
+```
+
+Open `http://127.0.0.1:8765`, choose `fixtures/sales.csv`, `fixtures/weather.csv`, and `fixtures/web_traffic.csv`, leave the per-session cap at 100 cents, and start the run. Confirm three live panels, isolation results, rendered reports/charts, and a follow-up on the sales session. Record each session's `list_cost_cents` and `active_seconds` from `runs/<run_id>/summary.json` under Measured costs. If a session pauses, use the web raise-budget control with a cap above its consumed cost plus one cent (up to 500 cents in the UI).
+
 ## Measured costs
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 6: review [PR #6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) and run the pending Phase 2–6 live acceptance when an API key is available locally. Phase 7 starts only after PR #6 merges.
+Phase 7: finish offline checks, open one PR against `main`, and leave it for review. Phase 2–7 live acceptance remains pending until a local API key is available. Do not start Phase 8.
