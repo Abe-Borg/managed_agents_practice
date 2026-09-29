@@ -15,6 +15,7 @@ from anthropic import (
     ConflictError,
     NotFoundError,
 )
+from anthropic.lib import files_from_dir
 from anthropic.types.beta.sessions import BetaManagedAgentsStreamSessionEvents
 
 from csv_analyst.agent_spec import AgentSpec, EnvironmentSpec
@@ -52,6 +53,12 @@ class EnvironmentInfo:
     archived: bool
 
 
+@dataclass(frozen=True)
+class SkillInfo:
+    id: str
+    latest_version_id: str
+
+
 class Platform(Protocol):
     def create_environment(self, spec: EnvironmentSpec) -> EnvironmentInfo: ...
 
@@ -68,6 +75,12 @@ class Platform(Protocol):
     ) -> AgentInfo: ...
 
     def list_agent_versions(self, agent_id: str) -> list[AgentVersionInfo]: ...
+
+    def create_skill(self, directory: Path) -> SkillInfo: ...
+
+    def retrieve_skill(self, skill_id: str) -> SkillInfo: ...
+
+    def create_skill_version(self, skill_id: str, directory: Path) -> SkillInfo: ...
 
 
 class SdkPlatform:
@@ -166,10 +179,31 @@ class SdkPlatform:
         ]
 
 
+    def create_skill(self, directory: Path) -> SkillInfo:
+        resource = self._client.skills.create(files=files_from_dir(str(directory)))
+        return SkillInfo(resource.id, resource.latest_version_id)
+
+    def retrieve_skill(self, skill_id: str) -> SkillInfo:
+        try:
+            resource = self._client.skills.retrieve(skill_id=skill_id)
+        except NotFoundError as exc:
+            raise PlatformNotFound(skill_id) from exc
+        return SkillInfo(resource.id, resource.latest_version_id)
+
+    def create_skill_version(self, skill_id: str, directory: Path) -> SkillInfo:
+        version = self._client.skills.versions.create(
+            skill_id=skill_id, files=files_from_dir(str(directory))
+        )
+        return SkillInfo(skill_id, version.id)
+
+
 @dataclass(frozen=True)
 class SessionInfo:
     id: str
     status: str
+    agent_version: int | None = None
+    model: str | None = None
+    skill_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -195,6 +229,9 @@ class SessionPlatform(Protocol):
         input_name: str,
         budget_cents: int | None,
         run_id: str,
+        *,
+        agent_version: int | None = None,
+        model: str | None = None,
     ) -> SessionInfo: ...
 
     async def open_event_stream(self, session_id: str) -> SessionEventStream: ...
@@ -249,9 +286,23 @@ class SdkSessionPlatform:
         input_name: str,
         budget_cents: int | None,
         run_id: str,
+        *,
+        agent_version: int | None = None,
+        model: str | None = None,
     ) -> SessionInfo:
+        agent_ref: str | dict[str, Any] = agent_id
+        if model is not None:
+            agent_ref = {
+                "type": "agent_with_overrides",
+                "id": agent_id,
+                "model": {"id": model},
+            }
+            if agent_version is not None:
+                agent_ref["version"] = agent_version
+        elif agent_version is not None:
+            agent_ref = {"type": "agent", "id": agent_id, "version": agent_version}
         fields: dict[str, Any] = {
-            "agent": agent_id,
+            "agent": agent_ref,
             "environment_id": environment_id,
             "resources": [
                 {"type": "file", "file_id": file_id, "mount_path": f"/{input_name}"}
@@ -265,7 +316,15 @@ class SdkSessionPlatform:
                 "max_list_cost": {"amount": str(budget_cents), "currency": "USD"},
             }
         session = await self._client.beta.sessions.create(**fields)
-        return SessionInfo(session.id, session.status)
+        resolved = cast(Any, session.agent)
+        skills = resolved.skills or []
+        return SessionInfo(
+            session.id,
+            session.status,
+            agent_version=resolved.version,
+            model=resolved.model.id,
+            skill_ids=tuple(skill.skill_id for skill in skills),
+        )
 
     async def open_event_stream(self, session_id: str) -> SessionEventStream:
         stream = await self._client.beta.sessions.events.stream(session_id)

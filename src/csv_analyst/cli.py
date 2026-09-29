@@ -27,7 +27,13 @@ from csv_analyst.platform import (
     SdkPlatform,
     SdkSessionPlatform,
 )
-from csv_analyst.resources import ensure_agent, ensure_environment, load_state
+from csv_analyst.resources import (
+    SKILL_DIR,
+    ensure_agent,
+    ensure_environment,
+    ensure_skill,
+    load_state,
+)
 from csv_analyst.runner import SessionResult, run_session
 
 app = typer.Typer(help="Analyze CSV files with Claude Managed Agents.")
@@ -86,7 +92,12 @@ def setup() -> None:
     platform, settings = _configured_platform()
     try:
         environment = ensure_environment(platform, build_environment_spec())
-        agent = ensure_agent(platform, build_agent_spec(settings))
+        if load_state().agent_id is None:
+            ensure_agent(platform, build_agent_spec(settings))
+        skill = ensure_skill(platform, SKILL_DIR)
+        agent = ensure_agent(
+            platform, build_agent_spec(settings, skill_id=skill.resource.id)
+        )
     except (PlatformConflict, PlatformValidationError, ValueError) as exc:
         typer.echo(f"Setup failed: {exc}", err=True)
         raise typer.Exit(code=2) from exc
@@ -94,6 +105,10 @@ def setup() -> None:
     typer.echo(f"Environment: {environment.resource.id} ({environment.action})")
     if environment.detail == "unrestricted-fallback":
         typer.echo("Networking: unrestricted fallback (limited config was rejected)")
+    typer.echo(
+        f"Skill: {skill.resource.id} {skill.resource.latest_version_id} "
+        f"({skill.action})"
+    )
     agent_action = (
         f"updated → v{agent.resource.version}"
         if agent.action == "updated"
@@ -120,6 +135,8 @@ def resources() -> None:
     if state.environment_mode == "unrestricted-fallback":
         console.print("Networking: unrestricted fallback")
     console.print(f"Agent: {state.agent_id} v{state.agent_version}")
+    if state.skill_id is not None:
+        console.print(f"Skill: {state.skill_id} {state.skill_version}")
     table = Table(title="Agent versions")
     table.add_column("Version")
     table.add_column("Updated")
@@ -147,6 +164,12 @@ def run(
     ] = None,
     record_events: Annotated[
         Path | None, typer.Option(help="Write raw events as JSONL.")
+    ] = None,
+    agent_version: Annotated[
+        int | None, typer.Option(help="Pin a saved Agent version for this session.")
+    ] = None,
+    model: Annotated[
+        str | None, typer.Option(help="Override the model for this session only.")
     ] = None,
     no_budget: Annotated[
         bool, typer.Option("--no-budget", help="Explicitly run without a cost cap.")
@@ -212,6 +235,8 @@ def run(
                     run_id,
                     budget_cents=cap,
                     timeout_s=limit,
+                    agent_version=agent_version,
+                    model=model,
                     sink=on_progress,
                     raw_sink=on_raw,
                 )
@@ -243,6 +268,11 @@ def run(
         raise typer.Exit(code=1) from exc
 
     console.print(f"Session: {result.session_id}")
+    console.print(f"Agent version: {result.agent_version}")
+    console.print(f"Model: {result.model}")
+    console.print(
+        f"Attached Skills: {', '.join(result.skill_ids) if result.skill_ids else 'none'}"
+    )
     console.print(f"Status: {result.status} ({result.stop_reason})")
     console.print(f"Cost: {format_cost(result.list_cost_cents)}")
     if artifact_dir is not None:

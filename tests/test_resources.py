@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+import shutil
 
 import pytest
 from typer.testing import CliRunner
@@ -179,6 +180,8 @@ def test_setup_and_resources_commands_use_saved_state(
 ) -> None:
     platform = FakePlatform()
     monkeypatch.chdir(tmp_path)
+    source_skill = Path(__file__).resolve().parents[1] / "skills" / "csv-report"
+    shutil.copytree(source_skill, tmp_path / "skills" / "csv-report")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-cli-test")
     monkeypatch.setattr(cli_module, "SdkPlatform", lambda _key: platform)
     runner = CliRunner()
@@ -188,7 +191,11 @@ def test_setup_and_resources_commands_use_saved_state(
     listed = runner.invoke(app, ["resources"])
 
     assert first.exit_code == second.exit_code == listed.exit_code == 0
-    assert "created" in first.output
+    assert "Skill: skill_1" in first.output
+    assert "updated" in first.output and "v2" in first.output
     assert "unchanged" in second.output
+    assert platform.agent_creates == 1
+    assert platform.agent_updates == 1
     assert "Agent versions" in listed.output
+    assert "Skill: skill_1" in listed.output
     assert "agent_1" in listed.output
