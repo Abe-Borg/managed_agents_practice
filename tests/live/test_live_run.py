@@ -13,7 +13,12 @@ from csv_analyst.agent_spec import build_agent_spec, build_environment_spec
 from csv_analyst.config import load_settings
 from csv_analyst.outputs import collect
 from csv_analyst.platform import SdkPlatform, SdkSessionPlatform
-from csv_analyst.resources import SKILL_DIR, ensure_agent, ensure_environment, ensure_skill
+from csv_analyst.resources import (
+    SKILL_DIR,
+    ensure_agent,
+    ensure_environment,
+    ensure_skill,
+)
 from csv_analyst.runner import run_session
 
 
