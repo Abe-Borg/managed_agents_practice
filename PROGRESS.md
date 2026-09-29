@@ -10,7 +10,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
-| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | 🔍 in review | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Parallel runs, exclusive marker isolation, summaries, and budget resume; 55 offline tests passed. Live verification pending (local runner unavailable; key presence unverified). |
+| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | 🔍 in review | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Parallel runs, exclusive marker isolation, summaries, and budget resume; 57 offline tests passed. Live verification pending (local runner unavailable; key presence unverified). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
