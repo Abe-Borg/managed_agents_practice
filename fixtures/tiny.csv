@@ -1,0 +1,11 @@
+date,region,product,units,revenue
+2026-01-01,North,Notebook,7,84.00
+2026-01-02,South,Mug,5,45.00
+2026-01-03,East,Tote,8,144.00
+2026-01-04,West,Notebook,3,36.00
+2026-01-05,North,Mug,7,63.00
+2026-01-06,South,Tote,4,72.00
+2026-01-07,East,Notebook,6,72.00
+2026-01-08,West,Mug,8,72.00
+2026-01-09,North,Tote,2,36.00
+2026-01-10,South,Notebook,1,12.00

@@ -1,0 +1,121 @@
+date,region,product,units,revenue
+2026-01-01,North,Pen Set,14,98.00
+2026-01-01,South,Mug,23,207.00
+2026-01-01,East,Tote,22,396.00
+2026-01-01,West,Pen Set,2,14.00
+2026-01-02,North,Notebook,20,240.00
+2026-01-02,South,Tote,16,288.00
+2026-01-02,East,Pen Set,2,14.00
+2026-01-02,West,Notebook,17,204.00
+2026-01-03,North,Notebook,7,84.00
+2026-01-03,South,Tote,4,72.00
+2026-01-03,East,Pen Set,23,161.00
+2026-01-03,West,Tote,4,72.00
+2026-01-04,North,Pen Set,3,21.00
+2026-01-04,South,Mug,2,18.00
+2026-01-04,East,Tote,16,288.00
+2026-01-04,West,Notebook,8,96.00
+2026-01-05,North,Mug,10,90.00
+2026-01-05,South,Tote,19,342.00
+2026-01-05,East,Pen Set,18,126.00
+2026-01-05,West,Tote,6,108.00
+2026-01-06,North,Mug,3,27.00
+2026-01-06,South,Pen Set,3,21.00
+2026-01-06,East,Pen Set,23,161.00
+2026-01-06,West,Tote,10,180.00
+2026-01-07,North,Notebook,18,216.00
+2026-01-07,South,Tote,8,144.00
+2026-01-07,East,Tote,22,396.00
+2026-01-07,West,Tote,12,216.00
+2026-01-08,North,Mug,4,36.00
+2026-01-08,South,Mug,13,117.00
+2026-01-08,East,Tote,15,270.00
+2026-01-08,West,Pen Set,10,70.00
+2026-01-09,North,Tote,17,306.00
+2026-01-09,South,Notebook,19,228.00
+2026-01-09,East,Tote,10,180.00
+2026-01-09,West,Notebook,3,36.00
+2026-01-10,North,Tote,7,126.00
+2026-01-10,South,Tote,14,252.00
+2026-01-10,East,Pen Set,24,168.00
+2026-01-10,West,Notebook,3,36.00
+2026-01-11,North,Tote,4,72.00
+2026-01-11,South,Tote,13,234.00
+2026-01-11,East,Notebook,3,36.00
+2026-01-11,West,Mug,18,162.00
+2026-01-12,North,Notebook,23,276.00
+2026-01-12,South,Notebook,14,168.00
+2026-01-12,East,Pen Set,14,98.00
+2026-01-12,West,Pen Set,6,42.00
+2026-01-13,North,Tote,12,216.00
+2026-01-13,South,Notebook,20,240.00
+2026-01-13,East,Tote,24,432.00
+2026-01-13,West,Tote,13,234.00
+2026-01-14,North,Notebook,22,264.00
+2026-01-14,South,Notebook,10,120.00
+2026-01-14,East,Notebook,17,204.00
+2026-01-14,West,Mug,13,117.00
+2026-01-15,North,Mug,14,126.00
+2026-01-15,South,Notebook,4,48.00
+2026-01-15,East,Notebook,10,120.00
+2026-01-15,West,Notebook,15,180.00
+2026-01-16,North,Pen Set,22,154.00
+2026-01-16,South,Mug,13,117.00
+2026-01-16,East,Notebook,14,168.00
+2026-01-16,West,Notebook,17,204.00
+2026-01-17,North,Notebook,7,84.00
+2026-01-17,South,Tote,3,54.00
+2026-01-17,East,Notebook,13,156.00
+2026-01-17,West,Notebook,18,216.00
+2026-01-18,North,Mug,2,18.00
+2026-01-18,South,Mug,19,171.00
+2026-01-18,East,Notebook,18,216.00
+2026-01-18,West,Tote,7,126.00
+2026-01-19,North,Pen Set,15,105.00
+2026-01-19,South,Tote,9,162.00
+2026-01-19,East,Pen Set,15,105.00
+2026-01-19,West,Mug,7,63.00
+2026-01-20,North,Notebook,16,192.00
+2026-01-20,South,Notebook,16,192.00
+2026-01-20,East,Pen Set,19,133.00
+2026-01-20,West,Mug,20,180.00
+2026-01-21,North,Mug,23,207.00
+2026-01-21,South,Notebook,23,276.00
+2026-01-21,East,Notebook,17,204.00
+2026-01-21,West,Notebook,17,204.00
+2026-01-22,North,Tote,13,234.00
+2026-01-22,South,Mug,14,126.00
+2026-01-22,East,Pen Set,8,56.00
+2026-01-22,West,Notebook,20,240.00
+2026-01-23,North,Pen Set,15,105.00
+2026-01-23,South,Pen Set,3,21.00
+2026-01-23,East,Tote,23,414.00
+2026-01-23,West,Pen Set,7,49.00
+2026-01-24,North,Mug,20,180.00
+2026-01-24,South,Mug,3,27.00
+2026-01-24,East,Pen Set,3,21.00
+2026-01-24,West,Pen Set,16,112.00
+2026-01-25,North,Mug,13,117.00
+2026-01-25,South,Notebook,6,72.00
+2026-01-25,East,Mug,18,162.00
+2026-01-25,West,Tote,18,324.00
+2026-01-26,North,Pen Set,23,161.00
+2026-01-26,South,Tote,6,108.00
+2026-01-26,East,Mug,5,45.00
+2026-01-26,West,Mug,12,108.00
+2026-01-27,North,Pen Set,12,84.00
+2026-01-27,South,Mug,12,108.00
+2026-01-27,East,Notebook,14,168.00
+2026-01-27,West,Pen Set,5,35.00
+2026-01-28,North,Tote,7,126.00
+2026-01-28,South,Pen Set,8,56.00
+2026-01-28,East,Tote,6,108.00
+2026-01-28,West,Pen Set,20,140.00
+2026-01-29,North,Pen Set,24,168.00
+2026-01-29,South,Mug,18,162.00
+2026-01-29,East,Notebook,12,144.00
+2026-01-29,West,Notebook,5,60.00
+2026-01-30,North,Pen Set,19,133.00
+2026-01-30,South,Pen Set,2,14.00
+2026-01-30,East,Tote,12,216.00
+2026-01-30,West,Pen Set,18,126.00
