@@ -54,6 +54,22 @@ Checked the official HTML pages on 2026-09-29 PT before implementing Phase 4. No
 | Session agent reference and overrides | A string Agent ID selects latest; `{"type":"agent","id":...,"version":N}` pins a version. `agent_with_overrides` accepts an optional base version and replacement fields such as `model:{"id":...}`; overrides do not change the saved Agent. The response's resolved `agent` includes its ID, version, model, and effective fields. | https://platform.claude.com/docs/en/managed-agents/sessions | 2026-09-29 | Phase 4 | docs |
 | Override model | `claude-sonnet-5-5` is a current Claude API model ID at $2 input and $10 output per million tokens. | https://platform.claude.com/docs/en/models/overview | 2026-09-29 | Phase 4 | docs |
 
+## Phase 5 documentation checks
+
+Checked official HTML documentation on 2026-09-29 PT before implementing Phase 5. No live API call was made.
+
+| Fact | Value | Source URL | Verified (PT) | By (phase/PR) | Method |
+|------|-------|-----------|---------------|---------------|--------|
+| Budget pause and usage | A cap is checked between model requests and may overshoot by one in-flight request. The session emits thread idle, then cumulative session.usage (whole-cent list_cost and active_seconds), then session.status_idle with stop_reason=budget_reached. Use the session-level stop reason. | https://platform.claude.com/docs/en/managed-agents/budgets | 2026-09-29 | Phase 5 | docs |
+| Events at the cap | A user.message is rejected with 400 while at/over budget. A paused session retains its history and sandbox. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 5 | docs |
+| Budget update | sessions.update(session_id, budget={"type":"limit","max_list_cost":{"amount":"500","currency":"USD"}}) automatically resumes paused work. The new cap must exceed consumed list cost; use at least one cent of margin over the reported rounded figure. A budget cannot be added to an unbudgeted session. | https://platform.claude.com/docs/en/managed-agents/budgets | 2026-09-29 | Phase 5 | docs |
+| Session usage | A retrieved session carries usage.list_cost and usage.active_seconds; usage is cumulative. | https://platform.claude.com/docs/en/managed-agents/budgets | 2026-09-29 | Phase 5 | docs |
+| Session update semantics | Changing an existing cap or removing it automatically resumes budget-paused work. | https://platform.claude.com/docs/en/managed-agents/session-operations | 2026-09-29 | Phase 5 | docs |
+| Rate limits | Managed Agents create endpoints: 300/minute; read endpoints: 1,200/minute per organization, plus organization spending and tier limits. | https://platform.claude.com/docs/en/managed-agents/reference | 2026-09-29 | Phase 5 | docs |
+| Cloud sandbox isolation | Sessions may share one Environment config, but each gets its own fresh isolated Linux container. | https://platform.claude.com/docs/en/managed-agents/environments | 2026-09-29 | Phase 5 | docs |
+
+The plan's pre-write marker list can miss a shared filesystem when sessions check before any marker is written. Phase 5 adds an exclusive-create marker path shared by every session in a run; in a shared filesystem only one session can create it, even if checks are sequential. The manifest records the result. The CLI applies the plan's stricter budget rule (new cap > reported consumed cents + 1) to leave room for rounding and resumed work.
+
 ## Plan snapshot: remaining facts to re-verify before implementation
 
 The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PLAN.md). Their values have **not** been independently checked here. Re-fetch the linked official pages in the phase that uses each fact and replace the status with a dated verification before relying on it in code.
@@ -61,7 +77,6 @@ The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PL
 | Fact | Value from plan §4 | Source URL to check | Verified (PT) | By (phase/PR) | Method |
 |------|--------------------|---------------------|---------------|---------------|--------|
 | HTTP API conventions | Base `https://api.anthropic.com`; `x-api-key`, `anthropic-version: 2023-06-01`, and Managed Agents beta header; some stream examples use `?beta=true`. | https://platform.claude.com/docs/en/managed-agents/overview | — | plan §4; re-verify | plan snapshot |
-| Managed Agents rate limits | Plan says 300 create requests/minute and 1,200 read requests/minute per organization, subject to other limits. | https://platform.claude.com/docs/en/managed-agents/reference | — | plan §4; re-verify | plan snapshot |
 
 ## Live-call observations
 

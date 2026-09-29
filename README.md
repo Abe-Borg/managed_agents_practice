@@ -52,6 +52,23 @@ The CLI accepts a single existing `.csv` file with a filename made of letters, d
 
 To run the live smoke test explicitly, set `CSV_ANALYST_LIVE=1` and run `uv run pytest -m live tests/live/test_live_run.py`. It creates at most one 25-cent session. The Phase 4 live check uses `tests/live/test_live_skill.py` and starts three sessions capped at 50 cents each. A working API key is required; the offline test suite does not contact the service.
 
+## Run CSVs in parallel
+
+```powershell
+uv run csv-analyst run fixtures/sales.csv fixtures/weather.csv fixtures/web_traffic.csv --max-parallel 3
+```
+
+Each CSV gets its own session, budget, artifact folder, and row in `runs/<run_id>/summary.json`. The terminal shows live status and cost for each session plus an isolation table. Inputs with the same stem are rejected before any API call.
+
+To exercise the budget pause and automatic resume:
+
+```powershell
+uv run csv-analyst run fixtures/sales.csv --budget-cents 5
+uv run csv-analyst raise-budget <session_id> --to-cents 100
+```
+
+Use the session ID printed by the first command. The new cap must exceed the session's consumed list cost by more than one cent. Raising it resumes the paused work without another message. The second command downloads completed artifacts under `runs/resumed-<session_id>/sales/`.
+
 ## Check the scaffold
 
 ```powershell
