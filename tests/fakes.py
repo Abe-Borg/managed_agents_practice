@@ -145,6 +145,7 @@ class FakeEventStream:
 class FakeSessionPlatform:
     def __init__(self, events: list[dict[str, Any]] | None = None) -> None:
         self.events = events or []
+        self.history_events: list[dict[str, Any]] | None = None
         self.calls: list[str] = []
         self.budget_cents: int | None = None
         self.output_schedule: list[list[OutputFileInfo]] = []
@@ -154,6 +155,10 @@ class FakeSessionPlatform:
         self.saved_agent_version = 2
         self.saved_model = "claude-haiku-4-5"
         self.saved_skill_ids = ("skill_1",)
+        self.session_status = "idle"
+        self.session_cost = 6
+        self.session_budget = 5
+        self.updated_budget: int | None = None
 
     async def close(self) -> None:
         self.calls.append("platform.close")
@@ -212,13 +217,24 @@ class FakeSessionPlatform:
         self.calls.append("events.send_interrupt")
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
-        return SessionInfo(session_id, "idle")
+        return SessionInfo(
+            session_id,
+            self.session_status,
+            title="csv-analyst: tiny.csv",
+            budget_cents=self.session_budget,
+            list_cost_cents=self.session_cost,
+            active_seconds=1.0,
+        )
+
+    async def update_session_budget(self, session_id: str, to_cents: int) -> None:
+        self.calls.append("session.update_budget")
+        self.updated_budget = to_cents
 
     async def archive_session(self, session_id: str) -> SessionInfo:
         return SessionInfo(session_id, "archived")
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
-        return self.events
+        return self.history_events if self.history_events is not None else self.events
 
     async def list_output_files(self, session_id: str) -> list[OutputFileInfo]:
         self.list_calls += 1

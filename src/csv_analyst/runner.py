@@ -26,6 +26,7 @@ class SessionResult:
     agent_version: int | None = None
     model: str | None = None
     skill_ids: tuple[str, ...] = ()
+    active_seconds: float | None = None
 
 
 async def run_session(
@@ -71,16 +72,23 @@ async def run_session(
     stream = await platform.open_event_stream(session.id)
     reason: str | None = None
     cost: int | None = None
+    active_seconds: float | None = None
     errors: list[str] = []
     try:
         try:
             async with asyncio.timeout(timeout_s):
                 await platform.send_message(
-                    session.id, build_user_message(input_path.name, input_path.stem)
+                    session.id, build_user_message(input_path.name, input_path.stem, run_id)
                 )
                 async for raw in stream:
                     if raw_sink is not None:
                         raw_sink(raw)
+                    if raw.get("type") == "session.usage":
+                        usage = raw.get("usage")
+                        if isinstance(usage, dict) and isinstance(
+                            usage.get("active_seconds"), (int, float)
+                        ):
+                            active_seconds = float(usage["active_seconds"])
                     progress = normalize(
                         raw, session_id=session.id, label=input_path.stem
                     )
@@ -118,4 +126,84 @@ async def run_session(
         session.agent_version,
         session.model,
         session.skill_ids,
+        active_seconds,
+    )
+
+
+async def resume_budget_session(
+    platform: SessionPlatform,
+    session_id: str,
+    to_cents: int,
+    *,
+    timeout_s: int,
+    sink: Callable[[ProgressEvent], None] | None = None,
+) -> SessionResult:
+    """Raise an existing cap and consume the automatically resumed work."""
+    if to_cents <= 0 or timeout_s <= 0:
+        raise ValueError("Budget and timeout must be positive")
+    session = await platform.retrieve_session(session_id)
+    if session.status != "idle" or session.budget_cents is None:
+        raise ValueError("Session must be idle with an existing budget")
+    if session.list_cost_cents is None or to_cents <= session.list_cost_cents + 1:
+        raise ValueError("New cap must exceed consumed list cost by more than one cent")
+    events = await platform.list_events(session_id)
+    idle = next(
+        (event for event in reversed(events) if event.get("type") == "session.status_idle"),
+        None,
+    )
+    stop = idle.get("stop_reason") if idle is not None else None
+    if not isinstance(stop, dict) or stop.get("type") != "budget_reached":
+        raise ValueError("Session is not paused at its budget")
+
+    stream = await platform.open_event_stream(session_id)
+    reason: str | None = None
+    cost = session.list_cost_cents
+    active_seconds = session.active_seconds
+    errors: list[str] = []
+    try:
+        try:
+            async with asyncio.timeout(timeout_s):
+                await platform.update_session_budget(session_id, to_cents)
+                async for raw in stream:
+                    if raw.get("type") == "session.usage":
+                        usage = raw.get("usage")
+                        if isinstance(usage, dict) and isinstance(
+                            usage.get("active_seconds"), (int, float)
+                        ):
+                            active_seconds = float(usage["active_seconds"])
+                    progress = normalize(raw, session_id=session_id, label=session_id)
+                    if progress is not None:
+                        if progress.list_cost_cents is not None:
+                            cost = progress.list_cost_cents
+                        if progress.kind == "error":
+                            errors.append(progress.text)
+                        if sink is not None:
+                            sink(progress)
+                    terminal, outcome = is_terminal(raw)
+                    if terminal:
+                        reason = outcome
+                        break
+        except TimeoutError:
+            reason = "timeout"
+            await platform.send_interrupt(session_id)
+    finally:
+        await stream.close()
+    if reason == "end_turn":
+        status: RunStatus = "completed"
+    elif reason == "budget_reached":
+        status = "paused_budget"
+    elif reason == "requires_action":
+        status = "requires_action"
+    else:
+        status = "failed"
+    return SessionResult(
+        session_id,
+        status,
+        reason or "stream_ended",
+        cost,
+        tuple(errors),
+        session.agent_version,
+        session.model,
+        session.skill_ids,
+        active_seconds,
     )

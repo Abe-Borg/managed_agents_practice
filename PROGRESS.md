@@ -9,8 +9,8 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
-| 4 | Custom Skill + agent versioning + session overrides | 🔍 in review | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Skill lifecycle, v2 Agent, version pins, and model overrides; 48 offline tests passed after review fixes. Live verification pending (local runner unavailable; key presence unverified). |
-| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
+| 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
+| 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | 🚧 in progress | — | 2026-09-29 | Parallel runs, exclusive marker isolation, summaries, and budget resume in progress. Live verification pending (key presence unverified). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
 | 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
@@ -37,22 +37,27 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 4): The desktop command runner failed before launch, so work started from the merged `main` commit through the repository connection and CI ran the offline checks. Local `main` sync and local live checks remain pending.
 - 2026-09-29 (Phase 4 review): Replaced missing or archived Agents with an unskilled v1 baseline before Skill attachment, required `manifest.skill_used`, and rejected duplicate CSV headers; added regression coverage — [PR #4 review](https://github.com/Abe-Borg/managed_agents_practice/pull/4).
 
+- 2026-09-29 (Phase 5): Confirmed [Phase 4 PR #4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) merged at 2026-09-29 10:43 PT (`ae8fe1a`) before Phase 5 work.
+- 2026-09-29 (Phase 5): Use one run-wide exclusive-create marker in each sandbox to avoid the pre-write marker race; reject duplicate input stems before work starts.
+- 2026-09-29 (Phase 5): Follow the documented automatic resume on budget update; do not send a new message at the cap. Require a new cap greater than reported consumed cents plus one.
+- 2026-09-29 (Phase 5): Desktop command and computer-use runners failed before launch. A fresh worktree was created from the verified merged main commit, while original local main remains unverified and unsynced.
+
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
 <!-- - [x] resolved: answer — source URL/date -->
 - [x] GitHub target resolved: [Abe-Borg/managed_agents_practice](https://github.com/Abe-Borg/managed_agents_practice) is connected, authentication works, and [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) is merged.
 - [ ] Phase 2: does the API accept `limited` networking with `allowed_hosts=[]`? The [Environment docs](https://platform.claude.com/docs/en/managed-agents/environments) describe the fields but do not specify empty-list acceptance. Verify with `uv run csv-analyst setup` when a key is available; if rejected, use the plan's documented unrestricted fallback and record the result.
 - [x] Phase 4: use resolved session Skill IDs and `manifest.skill_used` for the v1 comparison; report heading absence is not deterministic (plan §8, Phase 4).
-- [ ] Phase 5: strengthen the isolation check; concurrently listing markers before writing can pass even with a shared filesystem (plan §5.5 and Phase 5).
-- [ ] Phase 5: reject or disambiguate inputs with the same CSV stem so artifact directories do not collide (plan §5.1 and Phase 5).
+- [x] Phase 5: add a run-wide exclusive-create marker; in a shared filesystem only one session could create it, regardless of timing (plan §5.5 and Phase 5).
+- [x] Phase 5: reject case-insensitive duplicate CSV stems before creating sessions (plan §5.1 and Phase 5).
 - [ ] Phase 7: retain and replay run events for late SSE subscribers, including clients that connect after a short run completes (plan §8, Phase 7).
 - [ ] Phase 8: resolve the completion banner timing conflict: the notice requires every phase marked done, while Phase 8 says to show it while Phase 8 remains in review (plan completion notice, Phase 8, and §9).
 
 - [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service when the local runner and API key are available.
-- [ ] Local checkout: update `main` from origin when the desktop command runner is available; PR #4 was based on the confirmed merged `main` commit.
+- [ ] Local checkout: update original `main` from origin when the desktop command runner is available; a fresh Phase 5 worktree and GitHub branch were created from verified merge commit `ae8fe1a`.
 
 ## Measured costs
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 4: review [PR #4](https://github.com/Abe-Borg/managed_agents_practice/pull/4), sync the local checkout, and run the three budgeted live checks in `tests/live/test_live_skill.py` when a key is available. Phase 5 starts only after PR #4 merges.
+Phase 5: finish offline checks, open one PR against main, and run the four Phase 5 live sessions when a local API key and command runner are available. Do not start Phase 6.

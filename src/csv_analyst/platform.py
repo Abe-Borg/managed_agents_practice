@@ -203,6 +203,10 @@ class SessionInfo:
     agent_version: int | None = None
     model: str | None = None
     skill_ids: tuple[str, ...] = ()
+    title: str | None = None
+    budget_cents: int | None = None
+    list_cost_cents: int | None = None
+    active_seconds: float | None = None
 
 
 @dataclass(frozen=True)
@@ -218,6 +222,8 @@ class SessionEventStream(Protocol):
 
 
 class SessionPlatform(Protocol):
+    async def close(self) -> None: ...
+
     async def upload_file(self, path: Path) -> str: ...
 
     async def create_session(
@@ -240,6 +246,8 @@ class SessionPlatform(Protocol):
     async def send_interrupt(self, session_id: str) -> None: ...
 
     async def retrieve_session(self, session_id: str) -> SessionInfo: ...
+
+    async def update_session_budget(self, session_id: str, to_cents: int) -> None: ...
 
     async def archive_session(self, session_id: str) -> SessionInfo: ...
 
@@ -344,7 +352,36 @@ class SdkSessionPlatform:
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
         session = await self._client.beta.sessions.retrieve(session_id)
-        return SessionInfo(session.id, session.status)
+        usage = session.usage
+        budget = session.budget
+        resolved = cast(Any, session.agent)
+        skills = resolved.skills or []
+        return SessionInfo(
+            session.id,
+            session.status,
+            agent_version=resolved.version,
+            model=resolved.model.id,
+            skill_ids=tuple(skill.skill_id for skill in skills),
+            title=session.title,
+            budget_cents=(
+                int(budget.max_list_cost.amount) if budget is not None else None
+            ),
+            list_cost_cents=(
+                int(usage.list_cost.amount) if usage is not None else None
+            ),
+            active_seconds=(
+                float(usage.active_seconds) if usage is not None else None
+            ),
+        )
+
+    async def update_session_budget(self, session_id: str, to_cents: int) -> None:
+        await self._client.beta.sessions.update(
+            session_id,
+            budget={
+                "type": "limit",
+                "max_list_cost": {"amount": str(to_cents), "currency": "USD"},
+            },
+        )
 
     async def archive_session(self, session_id: str) -> SessionInfo:
         session = await self._client.beta.sessions.archive(session_id)
