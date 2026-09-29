@@ -31,7 +31,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ✅ done | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | Merged as `fbcca9288f53de29e581ef45977089c452eb6afd`; 71 offline tests passed. Live verification pending (no key in agent env). |
 | 7 | Local web UI with live SSE | ✅ done | [#7](https://github.com/Abe-Borg/managed_agents_practice/pull/7) | 2026-09-29 | Merged as `d414fec1f13bd0ceb937b2299ce74ce11dd65c14`; 79 offline tests passed. Live verification pending (no key in agent env). |
-| 8 | Hardening, docs, demo, completion banner | 🔍 in review | Phase 8 PR link pending | 2026-09-29 | README, architecture, benefits map, demo script, hardening, and final docs check; 82 offline tests passed. Live verification pending (no key in agent env). |
+| 8 | Hardening, docs, demo, completion banner | 🔍 in review | [#8](https://github.com/Abe-Borg/managed_agents_practice/pull/8) | 2026-09-29 | README, architecture, benefits map, demo script, hardening, and final docs check; 82 offline tests passed. Live verification pending (no key in agent env). |
 
 Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocked
 
@@ -166,4 +166,4 @@ uv run pytest -m live -s
 The manual Phase 2–7 commands above remain available for reproducing individual findings; running them in addition to this suite creates more than four sessions. The Phase 7 UI check cannot be claimed complete without a key and a browser run.
 
 ## Next up
-Phase 8: review its PR and run the exact pending live suite and Phase 7 browser steps above from an environment with a local API key. Merge is Abe's decision; after merge, flip the Phase 8 row to `✅ done` and record measured costs if live acceptance has run.
+Phase 8: review [PR #8](https://github.com/Abe-Borg/managed_agents_practice/pull/8) and run the exact pending live suite and Phase 7 browser steps above from an environment with a local API key. Merge is Abe's decision; after merge, flip the Phase 8 row to `✅ done` and record measured costs if live acceptance has run.
