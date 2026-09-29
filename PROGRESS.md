@@ -8,7 +8,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 |---|-------|--------|----|-----------|-------|
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
-| 3 | First session end-to-end (file in → stream → artifacts out, budget) | 🚧 in progress | — | 2026-09-28 | Docs and async SDK verified; 32 offline tests pass. Live verification pending (no key in agent env). |
+| 3 | First session end-to-end (file in → stream → artifacts out, budget) | 🔍 in review | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-28 | Docs and async SDK verified; 32 offline tests pass. Live verification pending (no key in agent env). |
 | 4 | Custom Skill + agent versioning + session overrides | ⬜ todo | — | — | — |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
@@ -44,4 +44,4 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
 ## Next up
-Phase 3: review the PR and run the live setup plus single-file smoke check when an API key is available. Phase 4 starts after the Phase 3 PR merges. No key is currently available in this environment.
+Phase 3: review [PR #3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) and run the live setup plus single-file smoke check when an API key is available. Phase 4 starts after PR #3 merges. No key is currently available in this environment.
