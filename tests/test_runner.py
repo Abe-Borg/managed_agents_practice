@@ -71,7 +71,7 @@ async def test_runner_stops_on_budget_pause(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_runner_recovers_from_retrying_error(tmp_path: Path) -> None:
     path = tmp_path / "tiny.csv"
-    path.write_text("x\\n1\\n", encoding="utf-8")
+    path.write_text("x\n1\n", encoding="utf-8")
     events = [
         {"type": "session.status_running"},
         {
