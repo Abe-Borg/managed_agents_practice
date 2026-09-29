@@ -9,7 +9,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ✅ done | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-29 | Merged 2026-09-29 PT; 33 offline tests passed. Phase 3 live verification remains pending. |
-| 4 | Custom Skill + agent versioning + session overrides | 🔍 in review | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Skill lifecycle, v2 Agent, version pins, and model overrides; 42 offline tests passed. Live verification pending (local runner unavailable; key presence unverified). |
+| 4 | Custom Skill + agent versioning + session overrides | 🔍 in review | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Skill lifecycle, v2 Agent, version pins, and model overrides; 48 offline tests passed after review fixes. Live verification pending (local runner unavailable; key presence unverified). |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
 | 7 | Local web UI with live SSE | ⬜ todo | — | — | — |
@@ -35,6 +35,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 4): Use the standard library for the CSV profiler to produce the required JSON without changing the locked dependency set.
 - 2026-09-29 (Phase 4): Verify the unskilled v1 through the resolved session Skill list and `manifest.skill_used=false`; heading absence is model-dependent and cannot prove version pinning.
 - 2026-09-29 (Phase 4): The desktop command runner failed before launch, so work started from the merged `main` commit through the repository connection and CI ran the offline checks. Local `main` sync and local live checks remain pending.
+- 2026-09-29 (Phase 4 review): Replaced missing or archived Agents with an unskilled v1 baseline before Skill attachment, required `manifest.skill_used`, and rejected duplicate CSV headers; added regression coverage — [PR #4 review](https://github.com/Abe-Borg/managed_agents_practice/pull/4).
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
