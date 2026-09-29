@@ -8,7 +8,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 |---|-------|--------|----|-----------|-------|
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
 | 2 | Environment + saved Agent (`setup`) | ✅ done | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | Merged 2026-09-28 PT; 23 offline tests passed. Live verification pending (no key in agent env). |
-| 3 | First session end-to-end (file in → stream → artifacts out, budget) | 🔍 in review | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-28 | Docs and async SDK verified; 32 offline tests pass. Live verification pending (no key in agent env). |
+| 3 | First session end-to-end (file in → stream → artifacts out, budget) | 🔍 in review | [#3](https://github.com/Abe-Borg/managed_agents_practice/pull/3) | 2026-09-28 | Docs and async SDK verified; 33 offline tests pass, including retry recovery. Live verification pending (no key in agent env). |
 | 4 | Custom Skill + agent versioning + session overrides | ⬜ todo | — | — | — |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ⬜ todo | — | — | — |
