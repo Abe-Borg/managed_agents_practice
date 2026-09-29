@@ -1,3 +1,21 @@
+# 🚨 ALL PHASES COMPLETE — MANAGED AGENTS PLAN IS DONE 🚨
+
+```
+    _    _     _       ____  _   _    _    ____  _____ ____
+   / \  | |   | |     |  _ \| | | |  / \  / ___|| ____/ ___|
+  / _ \ | |   | |     | |_) | |_| | / _ \ \___ \|  _| \___ \
+ / ___ \| |___| |___  |  __/|  _  |/ ___ \ ___) | |___ ___) |
+/_/   \_\_____|_____| |_|   |_| |_/_/   \_\____/|_____|____/
+
+  ____ ___  __  __ ____  _     _____ _____ _____
+ / ___/ _ \|  \/  |  _ \| |   | ____|_   _| ____|
+| |  | | | | |\/| | |_) | |   |  _|   | | |  _|
+| |__| |_| | |  | |  __/| |___| |___  | | | |___
+ \____\___/|_|  |_|_|   |_____|_____| |_| |_____|
+```
+
+**Abe: all 8 phases are merged or in review. Run the 5-minute demo in `README.md` → "Demo".**
+
 # PROGRESS: csv-analyst (Managed Agents first program)
 
 Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/verified-api-notes.md](docs/verified-api-notes.md)
@@ -12,8 +30,8 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | 4 | Custom Skill + agent versioning + session overrides | ✅ done | [#4](https://github.com/Abe-Borg/managed_agents_practice/pull/4) | 2026-09-29 | Merged 2026-09-29 10:43 PT; 48 offline tests passed. Live verification pending. |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ✅ done | [#5](https://github.com/Abe-Borg/managed_agents_practice/pull/5) | 2026-09-29 | Merged 2026-09-29 11:56 PT as `5de18ed`; 57 offline tests passed. Live verification pending (no key in agent env). |
 | 6 | Stateful follow-ups, reconnect (`tail`), cleanup | ✅ done | [#6](https://github.com/Abe-Borg/managed_agents_practice/pull/6) | 2026-09-29 | Merged as `fbcca9288f53de29e581ef45977089c452eb6afd`; 71 offline tests passed. Live verification pending (no key in agent env). |
-| 7 | Local web UI with live SSE | 🔍 in review | [#7](https://github.com/Abe-Borg/managed_agents_practice/pull/7) | 2026-09-29 | Local FastAPI UI, normalized SSE replay, safe uploads and artifacts, follow-up and budget endpoints; 79 offline tests passed. Live verification pending (no key in agent env). |
-| 8 | Hardening, docs, demo, completion banner | ⬜ todo | — | — | — |
+| 7 | Local web UI with live SSE | ✅ done | [#7](https://github.com/Abe-Borg/managed_agents_practice/pull/7) | 2026-09-29 | Merged as `d414fec1f13bd0ceb937b2299ce74ce11dd65c14`; 79 offline tests passed. Live verification pending (no key in agent env). |
+| 8 | Hardening, docs, demo, completion banner | 🔍 in review | Phase 8 PR link pending | 2026-09-29 | README, architecture, benefits map, demo script, hardening, and final docs check; 82 offline tests passed. Live verification pending (no key in agent env). |
 
 Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocked
 
@@ -52,24 +70,29 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 7): Keep an in-process replay log of 10,000 normalized events per run, attach sequence IDs to browser SSE, and accept `Last-Event-ID` or an `after` cursor. Late subscribers see short completed runs; an expired explicit cursor returns 409 instead of silently skipping events. Replay ends when the local server restarts.
 - 2026-09-29 (Phase 7): Accept only one to five flat lowercase `.csv` filenames, at most 1 MB each, with distinct case-insensitive stems; serve only manifest-listed collected artifacts. Escape raw report HTML and rewrite only collected chart images to local artifact URLs.
 - 2026-09-29 (Phase 7): Keep the API key on the server and redact it and file IDs from browser-facing progress, summary, reports, and text artifacts. Reject cross-origin browser writes and bind the CLI server to `127.0.0.1`.
+- 2026-09-29 (Phase 8): Independently confirmed [PR #7](https://github.com/Abe-Borg/managed_agents_practice/pull/7) merged as `d414fec1f13bd0ceb937b2299ce74ce11dd65c14`; inspected the clean local checkout, fetched `main`, and found it already at that merge before branching.
+- 2026-09-29 (Phase 8): Keep the SDK's exponential 429 backoff bounded to one retry. A 429 without `Retry-After` may be a spend cap, so report it and avoid an application retry loop. Preserve the existing one-retry optimistic-concurrency handling for Agent 409s.
+- 2026-09-29 (Phase 8): Consolidate opt-in live acceptance into one four-session suite covering saved setup, three overlapping isolated configurations, follow-up/history/archive, and budget pause/resume. Keep historical per-phase checks available under `live_extra`; they are not part of the four-session full pass.
+- 2026-09-29 (Phase 8): The final offline gate passed: `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src`, `uv run pytest -m "not live"` (82 passed, 6 optional historical live checks skipped, 1 four-session live check deselected), and `bash -n scripts/demo.sh`. One pytest cache write warning on Windows did not affect tests. `pytest -m live --collect-only -q` selected exactly one four-session test.
+- 2026-09-29 (Phase 8): Confirmed there is no `ANTHROPIC_API_KEY` environment variable or local `.env`; `uv run pytest -m live -q` selected the acceptance test and skipped it without an opt-in flag. No live sessions were created and no costs were measured.
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
 <!-- - [x] resolved: answer — source URL/date -->
 - [x] GitHub target resolved: [Abe-Borg/managed_agents_practice](https://github.com/Abe-Borg/managed_agents_practice) is connected, authentication works, and [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) is merged.
-- [ ] Phase 2: does the API accept `limited` networking with `allowed_hosts=[]`? The [Environment docs](https://platform.claude.com/docs/en/managed-agents/environments) describe the fields but do not specify empty-list acceptance. Verify with `uv run csv-analyst setup` when a key is available; if rejected, use the plan's documented unrestricted fallback and record the result.
+- [ ] Phase 2: does the API accept `limited` networking with `allowed_hosts=[]`? The [Environment docs](https://platform.claude.com/docs/en/managed-agents/environments) still do not specify empty-list acceptance as of 2026-09-29 PT. No local key is available; verify with `uv run csv-analyst setup`, then record the accepted mode or the documented unrestricted fallback.
 - [x] Phase 4: use resolved session Skill IDs and `manifest.skill_used` for the v1 comparison; report heading absence is not deterministic (plan §8, Phase 4).
 - [x] Phase 5: add a run-wide exclusive-create marker; in a shared filesystem only one session could create it, regardless of timing (plan §5.5 and Phase 5).
 - [x] Phase 5: reject case-insensitive duplicate CSV stems before creating sessions (plan §5.1 and Phase 5).
 - [x] Phase 7: retain and replay run events for late SSE subscribers, including clients that connect after a short run completes. The local server retains the newest 10,000 normalized events per run and rejects stale explicit cursors; see Phase 7 documentation checks and offline replay test.
-- [ ] Phase 8: resolve the completion banner timing conflict: the notice requires every phase marked done, while Phase 8 says to show it while Phase 8 remains in review (plan completion notice, Phase 8, and §9).
+- [x] Phase 8 banner timing: the Phase 8-specific task and acceptance criteria control the final phase's PR. Publish the exact banner when Phases 1–7 are `✅ done` and Phase 8 is `🔍 in review`; its text explicitly says "merged or in review." After Abe merges Phase 8, a later session can flip its row to `✅ done`. The notice's "every phase done" wording is read as the terminal announcement requirement, not a reason to omit the mandated Phase 8 review banner (plan completion notice and Phase 8).
 
-- [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service when the local runner and API key are available.
-- [ ] Phase 5 live: confirm three overlapping sessions with isolation passes, then a 5-cent budget pause and 100-cent resume; record measured costs.
+- [ ] Phase 4 live: confirm Skill upload/version response, resolved session Agent fields, report headings, and model override against the service. Documentation rechecked 2026-09-29 PT; no local key is available. The four-session suite covers these when run.
+- [ ] Phase 5 live: confirm three overlapping sessions with isolation passes, then a 5-cent budget pause and 100-cent resume; record measured costs. Documentation rechecked 2026-09-29 PT; no local key is available. The four-session suite covers these when run.
 - [x] Local checkout: original `main` was fast-forwarded from `4190f63` to verified Phase 5 merge `5de18ed` on 2026-09-29 PT.
-- [ ] Phase 6 live: confirm a follow-up actually reads the checkpointed `analysis.py`, numbered artifacts appear, `tail` returns complete history, and default cleanup archives sessions.
+- [ ] Phase 6 live: confirm a follow-up actually reads the checkpointed `analysis.py`, numbered artifacts appear, `tail` returns complete history, and default cleanup archives sessions. Documentation rechecked 2026-09-29 PT; no local key is available. The four-session suite covers these when run.
 - [x] Phase 7 checkout: original `main` fast-forwarded to verified PR #6 merge `fbcca9288f53de29e581ef45977089c452eb6afd` before branching.
-- [ ] Phase 7 live: use the local browser UI with three fixtures, observe concurrent panels, reports and charts, then ask a follow-up. No key was present in the local environment or `.env` during Phase 7 implementation.
+- [ ] Phase 7 live: use the local browser UI with three fixtures, observe concurrent panels, reports and charts, then ask a follow-up. Documentation rechecked 2026-09-29 PT; no key is present in the local environment or `.env` during Phase 8 either. Exact browser steps remain below.
 
 ## Phase 5 live commands (pending)
 
@@ -82,7 +105,7 @@ uv run csv-analyst run fixtures/sales.csv --budget-cents 5
 uv run csv-analyst raise-budget <session_id_from_previous_command> --to-cents 100
 ```
 
-The opt-in automated checks are `$env:CSV_ANALYST_LIVE = '1'` followed by `uv run pytest -m live tests/live/test_live_parallel.py -s`. They create four additional budgeted sessions.
+The four-session Phase 8 acceptance suite below covers the parallel and budget checks. The historical opt-in Phase 5 check is `$env:CSV_ANALYST_LIVE_EXTRA = '1'` followed by `uv run pytest -m live_extra tests/live/test_live_parallel.py -s`; it creates four **additional** sessions and is not part of the plan-limited full pass.
 
 ## Pending Phase 2–6 live acceptance (no key in agent env)
 
@@ -113,7 +136,7 @@ uv run csv-analyst tail <sales_session_id>
 uv run csv-analyst cleanup --run <parallel_run_id>
 ```
 
-The separate opt-in automated Phase 6 check is `$env:CSV_ANALYST_LIVE = '1'; uv run pytest -m live tests/live/test_live_followup.py -s`. It creates one additional session capped at 100 cents and archives it after the checks.
+The four-session Phase 8 acceptance suite below covers the Phase 6 follow-up/history/archive check. The historical opt-in check is `$env:CSV_ANALYST_LIVE_EXTRA = '1'; uv run pytest -m live_extra tests/live/test_live_followup.py -s`; it creates one **additional** session capped at 100 cents.
 
 ## Phase 7 live commands (pending; no key in agent env)
 
@@ -129,5 +152,18 @@ Open `http://127.0.0.1:8765`, choose `fixtures/sales.csv`, `fixtures/weather.csv
 ## Measured costs
 <!-- - YYYY-MM-DD: model, file, rows, list_cost cents, active_seconds -->
 
+No measured costs yet: live verification pending (no key in agent env and no local `.env`). Do not infer cost from caps.
+
+## Phase 8 live acceptance (pending; no key in agent env)
+
+Configure `ANTHROPIC_API_KEY` only in the local environment or ignored `.env`, then run exactly this four-session suite from the repository root. It covers Phase 2 setup twice and Agent history, Phase 3 output/stream/cost, Phase 4 Skill/v1/model override, Phase 5 three overlapping isolated sessions plus a budget pause/resume, and Phase 6 follow-up/history/archive. Record every printed `list_cost_cents` and `active_seconds` under Measured costs. Phase 7 still needs the browser steps above, which create three separately capped sessions if run as written.
+
+```powershell
+$env:CSV_ANALYST_LIVE = '1'
+uv run pytest -m live -s
+```
+
+The manual Phase 2–7 commands above remain available for reproducing individual findings; running them in addition to this suite creates more than four sessions. The Phase 7 UI check cannot be claimed complete without a key and a browser run.
+
 ## Next up
-Phase 7: review [PR #7](https://github.com/Abe-Borg/managed_agents_practice/pull/7). Phase 2–7 live acceptance remains pending until a local API key is available. Do not start Phase 8.
+Phase 8: review its PR and run the exact pending live suite and Phase 7 browser steps above from an environment with a local API key. Merge is Abe's decision; after merge, flip the Phase 8 row to `✅ done` and record measured costs if live acceptance has run.

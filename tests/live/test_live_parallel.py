@@ -39,10 +39,10 @@ def _resources() -> tuple[str, str, str]:
     return settings.api_key, agent.resource.id, environment.resource.id
 
 
-@pytest.mark.live
+@pytest.mark.live_extra
 def test_three_sessions_overlap_and_are_isolated(tmp_path: Path) -> None:
-    if os.environ.get("CSV_ANALYST_LIVE") != "1":
-        pytest.skip("Set CSV_ANALYST_LIVE=1")
+    if os.environ.get("CSV_ANALYST_LIVE_EXTRA") != "1":
+        pytest.skip("Set CSV_ANALYST_LIVE_EXTRA=1 for additional live calls")
     api_key, agent_id, environment_id = _resources()
     files = [
         Path("fixtures/sales.csv"),
@@ -73,10 +73,10 @@ def test_three_sessions_overlap_and_are_isolated(tmp_path: Path) -> None:
     print(f"parallel costs={[item.list_cost_cents for item in summary.sessions]}")
 
 
-@pytest.mark.live
+@pytest.mark.live_extra
 def test_budget_pause_and_resume(tmp_path: Path) -> None:
-    if os.environ.get("CSV_ANALYST_LIVE") != "1":
-        pytest.skip("Set CSV_ANALYST_LIVE=1")
+    if os.environ.get("CSV_ANALYST_LIVE_EXTRA") != "1":
+        pytest.skip("Set CSV_ANALYST_LIVE_EXTRA=1 for additional live calls")
     api_key, agent_id, environment_id = _resources()
 
     async def execute() -> tuple[int | None, int | None]:

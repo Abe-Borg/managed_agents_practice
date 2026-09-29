@@ -37,7 +37,10 @@ packages = ["src/csv_analyst"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = ["live: tests that call the Claude API and require explicit opt-in"]
+markers = [
+    "live: four-session Claude API acceptance suite requiring explicit opt-in",
+    "live_extra: optional historical phase checks that create additional sessions",
+]
 
 [tool.ruff]
 target-version = "py312"

@@ -23,10 +23,10 @@ from csv_analyst.resources import (
 from csv_analyst.runner import ask_session, cleanup_run, run_session, tail_session
 
 
-@pytest.mark.live
+@pytest.mark.live_extra
 def test_followup_uses_checkpoint_and_archives(tmp_path: Path) -> None:
-    if os.environ.get("CSV_ANALYST_LIVE") != "1":
-        pytest.skip("Set CSV_ANALYST_LIVE=1")
+    if os.environ.get("CSV_ANALYST_LIVE_EXTRA") != "1":
+        pytest.skip("Set CSV_ANALYST_LIVE_EXTRA=1 for additional live calls")
     settings = load_settings()
     if settings.api_key is None:
         pytest.skip("No ANTHROPIC_API_KEY available")

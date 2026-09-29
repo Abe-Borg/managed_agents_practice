@@ -23,10 +23,10 @@ from csv_analyst.resources import (
 from csv_analyst.runner import run_session
 
 
-@pytest.mark.live
+@pytest.mark.live_extra
 def test_tiny_file_produces_report_chart_script_and_manifest(tmp_path: Path) -> None:
-    if os.environ.get("CSV_ANALYST_LIVE") != "1":
-        pytest.skip("Set CSV_ANALYST_LIVE=1 to run the live smoke test")
+    if os.environ.get("CSV_ANALYST_LIVE_EXTRA") != "1":
+        pytest.skip("Set CSV_ANALYST_LIVE_EXTRA=1 for additional live calls")
     settings = load_settings()
     if settings.api_key is None:
         pytest.skip("No ANTHROPIC_API_KEY available")

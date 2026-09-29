@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -153,3 +154,37 @@ async def test_runner_pins_version_and_overrides_model(
     assert result.model == (model or platform.saved_model)
     assert result.skill_ids == expected_skills
     assert platform.agent_reference == expected_reference
+
+
+@pytest.mark.asyncio
+async def test_cancel_interrupts_remote_session_and_closes_stream(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "tiny.csv"
+    path.write_text("x\n1\n", encoding="utf-8")
+    waiting = asyncio.Event()
+
+    class WaitingPlatform(FakeSessionPlatform):
+        async def send_message(self, session_id: str, message: str) -> None:
+            await super().send_message(session_id, message)
+            waiting.set()
+            await asyncio.Event().wait()
+
+    platform = WaitingPlatform()
+    task = asyncio.create_task(
+        run_session(
+            platform,
+            path,
+            "agent_1",
+            "env_1",
+            "run_1",
+            budget_cents=50,
+            timeout_s=10,
+        )
+    )
+    await waiting.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert "events.send_interrupt" in platform.calls
+    assert "stream.close" in platform.calls

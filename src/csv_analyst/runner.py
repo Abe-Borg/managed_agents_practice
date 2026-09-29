@@ -7,6 +7,7 @@ import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
@@ -16,6 +17,14 @@ from csv_analyst.platform import PlatformNotFound, SessionInfo, SessionPlatform
 from csv_analyst.prompts import build_followup_message, build_user_message
 
 RunStatus = Literal["completed", "paused_budget", "requires_action", "failed"]
+
+
+async def _interrupt_cancelled(platform: SessionPlatform, session_id: str) -> None:
+    """Best effort: leave a cancelled local command without a running remote turn."""
+    try:
+        await asyncio.wait_for(platform.send_interrupt(session_id), timeout=5)
+    except Exception:
+        pass
 
 
 @dataclass(frozen=True)
@@ -97,7 +106,11 @@ async def run_session(
         agent_version=agent_version,
         model=model,
     )
-    stream = await platform.open_event_stream(session.id)
+    try:
+        stream = await platform.open_event_stream(session.id)
+    except asyncio.CancelledError:
+        await _interrupt_cancelled(platform, session.id)
+        raise
     reason: str | None = None
     cost: int | None = None
     active_seconds: float | None = None
@@ -135,6 +148,9 @@ async def run_session(
         except TimeoutError:
             reason = "timeout"
             await platform.send_interrupt(session.id)
+        except asyncio.CancelledError:
+            await _interrupt_cancelled(platform, session.id)
+            raise
     finally:
         await stream.close()
 
@@ -188,7 +204,11 @@ async def resume_budget_session(
     if not isinstance(stop, dict) or stop.get("type") != "budget_reached":
         raise ValueError("Session is not paused at its budget")
 
-    stream = await platform.open_event_stream(session_id)
+    try:
+        stream = await platform.open_event_stream(session_id)
+    except asyncio.CancelledError:
+        await _interrupt_cancelled(platform, session_id)
+        raise
     reason: str | None = None
     cost = session.list_cost_cents
     active_seconds = session.active_seconds
@@ -219,6 +239,9 @@ async def resume_budget_session(
         except TimeoutError:
             reason = "timeout"
             await platform.send_interrupt(session_id)
+        except asyncio.CancelledError:
+            await _interrupt_cancelled(platform, session_id)
+            raise
     finally:
         await stream.close()
     if reason == "end_turn":
@@ -257,6 +280,13 @@ async def ask_session(
     session = await platform.retrieve_session(session_id)
     if session.status != "idle":
         raise ValueError("Session must be idle before asking a follow-up")
+    if session.created_at is not None and datetime.now(
+        UTC
+    ) - session.created_at >= timedelta(days=30):
+        raise ValueError(
+            "This session's sandbox is at least 30 days old and its files may be gone. "
+            "Start a new run instead of relying on the old analysis.py."
+        )
     destination = session_artifact_dir(session, output_root)
     history = await platform.list_events(session_id)
     last_idle = next(
@@ -276,7 +306,11 @@ async def ask_session(
     index = next_followup_index(
         await platform.list_output_files(session_id), destination
     )
-    stream = await platform.open_event_stream(session_id)
+    try:
+        stream = await platform.open_event_stream(session_id)
+    except asyncio.CancelledError:
+        await _interrupt_cancelled(platform, session_id)
+        raise
     reason: str | None = None
     cost = session.list_cost_cents
     active_seconds = session.active_seconds
@@ -311,6 +345,9 @@ async def ask_session(
         except TimeoutError:
             reason = "timeout"
             await platform.send_interrupt(session_id)
+        except asyncio.CancelledError:
+            await _interrupt_cancelled(platform, session_id)
+            raise
     finally:
         await stream.close()
     status: RunStatus = (

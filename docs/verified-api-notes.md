@@ -2,6 +2,37 @@
 
 Rule: nothing goes in code that isn't in this file or re-verified in the same PR. A row marked **from plan, re-verify** is a planning note, not a verified API contract.
 
+## Phase 8 final re-verification (2026-09-29 PT)
+
+Re-read the current official HTML pages linked below. This final check covers every earlier fact row by its source and keeps the original check dates as history. The `.md` variants are not required by the browsing tool; no live API call was made. Facts depending on server behavior remain explicitly unverified in [PROGRESS.md](../PROGRESS.md).
+
+| Earlier facts or final check | Current finding | Source URL | Rechecked (PT) |
+|---|---|---|---|
+| Phase 1 beta header, access; plan HTTP conventions | Managed Agents remains beta, requires `managed-agents-2026-04-01` on Managed Agents endpoints, and the SDK sets it. Access is enabled by default for API accounts. | https://platform.claude.com/docs/en/managed-agents/overview | 2026-09-29 |
+| Phase 1 install and key | Python quickstart still installs `anthropic` and reads `ANTHROPIC_API_KEY`. | https://platform.claude.com/docs/en/managed-agents/quickstart | 2026-09-29 |
+| Phase 1 SDK release | PyPI still lists `anthropic==1.9.0` as latest and Python ≥3.10. The project's installed version remains pinned at 1.9.0. | https://pypi.org/project/anthropic/ | 2026-09-29 |
+| Phase 1 and 4 models | `claude-haiku-4-5` remains the Haiku 4.5 alias at $1/$5 per million input/output tokens; `claude-sonnet-5-5` remains $2/$10. | https://platform.claude.com/docs/en/models/overview | 2026-09-29 |
+| Phase 1 retirement | Haiku 4.5 remains active, with retirement no sooner than 2026-10-15. | https://platform.claude.com/docs/en/about-claude/model-deprecations | 2026-09-29 |
+| Phase 2 Agent fields, update, 409, versions | Saved Agents remain versioned; an update with stale `version` returns 409 and archived Agents reject updates. | https://platform.claude.com/docs/en/managed-agents/agent-setup | 2026-09-29 |
+| Phase 2 and 5 Environment lifecycle and networking | `limited` networking still uses `allowed_hosts`, `allow_mcp_servers`, and `allow_package_managers`; the page does **not** state whether an empty host list is accepted. | https://platform.claude.com/docs/en/managed-agents/environments | 2026-09-29 |
+| Sandbox specification and isolation | Cloud sandboxes remain Ubuntu 24.04 with up to 8 GB memory and 10 GB disk; sessions using one Environment receive isolated sandboxes. | https://platform.claude.com/docs/en/managed-agents/cloud-sandboxes-reference | 2026-09-29 |
+| Phase 3 and 4 session creation and overrides | Sessions reference an Agent and Environment, allow resources and budgets, and `agent_with_overrides` resolves without changing the saved Agent. | https://platform.claude.com/docs/en/managed-agents/sessions | 2026-09-29 |
+| Phase 3, 5, 6, 7 stream, history, interruption, resume | Streamed typed events and persisted IDs support reconnect; `user.interrupt` can wait on a tool call; the sandbox lasts 30 days from creation and then resumes fresh. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 |
+| Phase 6 session states, archive, delete | `idle`, `running`, `rescheduling`, `terminated` remain documented. Running sessions must be interrupted before archive/delete; final output listing can lag idle. | https://platform.claude.com/docs/en/managed-agents/session-operations | 2026-09-29 |
+| Phase 2 restricted tools | `agent_toolset_20260401`, tool `configs`, and per-tool enabled settings remain documented. | https://platform.claude.com/docs/en/managed-agents/tools | 2026-09-29 |
+| Phase 2 permission policy | `always_allow`, `always_ask`, and `auto` remain policy choices; the toolset default is `always_allow`. | https://platform.claude.com/docs/en/managed-agents/permission-policies | 2026-09-29 |
+| Phase 4 Skill attachment | Custom Skills remain attachable by `skill_id`, with `version: latest` or a pinned version. | https://platform.claude.com/docs/en/managed-agents/skills | 2026-09-29 |
+| Phase 4 upload/version and frontmatter | `files_from_dir` creation and complete-snapshot Skill versions remain documented; `SKILL.md` requires name and description. | https://platform.claude.com/docs/en/build-with-claude/skills-guide ; https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview | 2026-09-29 |
+| Phase 3, 6, 7 file mounts and outputs | Mounted uploads appear under `/mnt/session/uploads/`; scoped output listing needs the Managed Agents beta header; output listing may lag idle. | https://platform.claude.com/docs/en/managed-agents/files | 2026-09-29 |
+| Phase 3, 5, 7 budget, usage, resume | `max_list_cost.amount` is a positive whole-cent USD string; the cap is checked between model requests and the rounded `list_cost` can read above it. Raising an existing cap resumes work. | https://platform.claude.com/docs/en/managed-agents/budgets | 2026-09-29 |
+| Phase 5 rate limits | Managed Agents create endpoints remain 300/min and reads 1,200/min per organization; org spend limits also apply. | https://platform.claude.com/docs/en/managed-agents/reference | 2026-09-29 |
+| Future outcome idea only | `user.define_outcome` remains documented, but this project does not call it. | https://platform.claude.com/docs/en/managed-agents/define-outcomes | 2026-09-29 |
+| Phase 8 pricing | Tokens plus $0.08 per `running` session-hour; idle time is not runtime billed. | https://platform.claude.com/docs/en/about-claude/pricing | 2026-09-29 |
+| Phase 8 409/429 handling | SDKs back off on transient errors; a tier spend-cap 429 lacks `retry-after` and keeps failing. Project clients bound SDK retries to one and show a spend-limit hint when no header is present. | https://platform.claude.com/docs/en/api/errors ; https://platform.claude.com/docs/en/api/rate-limits | 2026-09-29 |
+| Phase 3 SDK event stream and retry errors | The session event stream and CLI event reference still document the typed stream and retry statuses. Installed 1.9.0 SDK signatures were checked locally for async stream use; server behavior is pending live acceptance. | https://platform.claude.com/docs/en/api/beta/sessions/events/stream ; https://platform.claude.com/docs/en/api/cli/beta/sessions/events | 2026-09-29 |
+
+The plan-snapshot HTTP row below is now re-verified by the overview and current SDK. The empty `allowed_hosts` question remains open for a live setup call. All other earlier API fact rows have current documentation support; live response shapes, timing, and costs remain pending without a local key.
+
 ## Phase 1 documentation checks
 
 Checked the official pages on 2026-09-28 PT. The `.md` page variants returned an unsupported content type in the browsing tool, so these checks used the same pages' HTML versions. No Managed Agents API call was made.
