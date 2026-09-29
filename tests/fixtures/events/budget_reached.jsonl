@@ -1,0 +1,3 @@
+{"id":"evt_b1","type":"session.thread_status_idle","stop_reason":{"type":"budget_reached"},"processed_at":"2026-09-28T00:00:01Z"}
+{"id":"evt_b2","type":"session.usage","usage":{"list_cost":{"amount":"6","currency":"USD"}},"processed_at":"2026-09-28T00:00:02Z"}
+{"id":"evt_b3","type":"session.status_idle","stop_reason":{"type":"budget_reached"},"processed_at":"2026-09-28T00:00:03Z"}
