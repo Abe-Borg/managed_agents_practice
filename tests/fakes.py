@@ -159,6 +159,10 @@ class FakeSessionPlatform:
         self.session_cost = 6
         self.session_budget = 5
         self.updated_budget: int | None = None
+        self.session_title = "csv-analyst: tiny.csv"
+        self.session_metadata = {"app": "csv-analyst", "run_id": "run_1"}
+        self.sent_message: str | None = None
+        self.missing_sessions: set[str] = set()
 
     async def close(self) -> None:
         self.calls.append("platform.close")
@@ -212,18 +216,22 @@ class FakeSessionPlatform:
 
     async def send_message(self, session_id: str, message: str) -> None:
         self.calls.append("events.send_message")
+        self.sent_message = message
 
     async def send_interrupt(self, session_id: str) -> None:
         self.calls.append("events.send_interrupt")
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
+        if session_id in self.missing_sessions:
+            raise PlatformNotFound(session_id)
         return SessionInfo(
             session_id,
             self.session_status,
-            title="csv-analyst: tiny.csv",
+            title=self.session_title,
             budget_cents=self.session_budget,
             list_cost_cents=self.session_cost,
             active_seconds=1.0,
+            metadata=self.session_metadata,
         )
 
     async def update_session_budget(self, session_id: str, to_cents: int) -> None:
@@ -231,7 +239,15 @@ class FakeSessionPlatform:
         self.updated_budget = to_cents
 
     async def archive_session(self, session_id: str) -> SessionInfo:
+        self.calls.append("session.archive")
         return SessionInfo(session_id, "archived")
+
+    async def delete_session(self, session_id: str) -> None:
+        self.calls.append("session.delete")
+
+    async def list_sessions(self, agent_id: str, limit: int) -> list[SessionInfo]:
+        self.calls.append("session.list")
+        return [await self.retrieve_session("sesn_fake")]
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
         return self.history_events if self.history_events is not None else self.events

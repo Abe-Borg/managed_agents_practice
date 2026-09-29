@@ -1,6 +1,6 @@
 # csv-analyst
 
-`csv-analyst` is a local CLI for analyzing a CSV file with Claude Managed Agents. It streams one managed session's progress and downloads a report, chart, script, and manifest. Parallel runs and the web UI arrive in later phases.
+`csv-analyst` is a local CLI for analyzing CSV files with Claude Managed Agents. It streams managed sessions' progress and downloads reports, charts, scripts, and manifests. A local web UI is planned for a later phase.
 
 ## Get started
 
@@ -67,7 +67,18 @@ uv run csv-analyst run fixtures/sales.csv --budget-cents 5
 uv run csv-analyst raise-budget <session_id> --to-cents 100
 ```
 
-Use the session ID printed by the first command. The new cap must exceed the session's consumed list cost by more than one cent. Raising it resumes the paused work without another message. The second command downloads completed artifacts under `runs/resumed-<session_id>/sales/`.
+Use the session ID printed by the first command. The new cap must exceed the session's consumed list cost by more than one cent. Raising it resumes the paused work without another message. The second command downloads completed artifacts into the original `runs/<run_id>/sales/` folder. Cleanup also recognizes the older `runs/resumed-<session_id>/sales/` location for sessions resumed before this change.
+
+## Continue and manage sessions
+
+```powershell
+uv run csv-analyst sessions --limit 20
+uv run csv-analyst ask <session_id> "Break revenue down by region with one chart"
+uv run csv-analyst tail <session_id>
+uv run csv-analyst cleanup --run <run_id>
+```
+
+`ask` requires an idle session and reuses its checkpointed sandbox. It saves new `followup_<n>_*` files in the original `runs/<run_id>/<stem>/` folder. `tail` prints persisted history, skips duplicate events from the live stream, and exits when an idle turn finishes. Add `--follow` to wait across idle turns. `cleanup` archives the run's owned sessions by default. `cleanup --run <run_id> --delete` permanently removes a session only after verifying its downloaded outputs locally; running sessions must first be interrupted and allowed to become idle.
 
 ## Check the scaffold
 

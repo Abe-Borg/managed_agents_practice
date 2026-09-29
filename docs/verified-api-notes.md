@@ -70,6 +70,20 @@ Checked official HTML documentation on 2026-09-29 PT before implementing Phase 5
 
 The plan's pre-write marker list can miss a shared filesystem when sessions check before any marker is written. Phase 5 adds an exclusive-create marker path shared by every session in a run; in a shared filesystem only one session can create it, even if checks are sequential. The manifest records the result. The CLI applies the plan's stricter budget rule (new cap > reported consumed cents + 1) to leave room for rounding and resumed work.
 
+## Phase 6 documentation checks
+
+Checked official HTML documentation on 2026-09-29 PT before implementing Phase 6, plus the installed `anthropic==1.9.0` SDK signatures. No live API call was made.
+
+| Fact | Value | Source URL | Verified (PT) | By (phase/PR) | Method |
+|------|-------|-----------|---------------|---------------|--------|
+| Idle follow-up | An idle session accepts a new `user.message`; its sandbox, including created files, is checkpointed. Sandbox state expires 30 days after creation even if the session is active later. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 6 | docs |
+| Reconnect and history | Open the event stream before listing persisted events, seed a set of event IDs from history, and skip those IDs in the live stream. Stream-only deltas are not persisted. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 6 | docs |
+| Interrupt | `user.interrupt` may take time to apply during a tool call; the session stays running until then. The interrupted turn ends with `session.status_idle` and `end_turn`, so that stop reason alone does not distinguish an interrupt. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 6 | docs |
+| Session states and list | Session states are `idle`, `running`, `rescheduling`, and `terminated`. `sessions.list(agent_id=..., limit=...)` is paginated, newest first by default; the Python async SDK exposes an async paginator. | https://platform.claude.com/docs/en/managed-agents/session-operations | 2026-09-29 | Phase 6 | docs + SDK |
+| Archive and delete | A running session cannot be archived or deleted. Archive prevents new events but preserves history; delete permanently removes session record, events, sandbox, and session-produced files. Last-turn output listings may lag idle by seconds. | https://platform.claude.com/docs/en/managed-agents/session-operations | 2026-09-29 | Phase 6 | docs |
+
+Phase 6 uses a `followup_<n>_manifest.json` file written last to identify and collect a turn's new flat files. This is an application artifact convention, not a platform API field. The plan's `tail --follow` is interpreted as continuing across idle turns; without it, an idle status ends tailing.
+
 ## Plan snapshot: remaining facts to re-verify before implementation
 
 The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PLAN.md). Their values have **not** been independently checked here. Re-fetch the linked official pages in the phase that uses each fact and replace the status with a dated verification before relying on it in code.

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from typer.testing import CliRunner
 
-from csv_analyst.platform import SdkSessionPlatform
+import csv_analyst.cli as cli_module
+from csv_analyst.cli import app
+from csv_analyst.platform import OutputFileInfo, SdkSessionPlatform
 from csv_analyst.runner import resume_budget_session
 from tests.fakes import FakeSessionPlatform
 
@@ -68,3 +73,40 @@ async def test_sdk_budget_update_body() -> None:
             "max_list_cost": {"amount": "100", "currency": "USD"},
         },
     )
+
+
+def test_raise_budget_collects_into_original_run_folder(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-cli-test")
+    platform = FakeSessionPlatform(
+        [{"type": "session.status_idle", "stop_reason": {"type": "end_turn"}}]
+    )
+    platform.history_events = [
+        {"type": "session.status_idle", "stop_reason": {"type": "budget_reached"}}
+    ]
+    names = ["report.md", "analysis.py", "manifest.json", "chart_01_a.png"]
+    platform.output_schedule = [[OutputFileInfo(name, name) for name in names]]
+    platform.output_payloads = {
+        "report.md": b"# Report",
+        "analysis.py": b"print(1)",
+        "chart_01_a.png": b"PNG",
+        "manifest.json": json.dumps(
+            {
+                "input_file": "tiny.csv",
+                "uploads_seen": ["tiny.csv"],
+                "markers_seen_before_write": [],
+                "rows": 1,
+                "columns": 1,
+                "charts": ["chart_01_a.png"],
+                "summary": "tiny",
+                "skill_used": True,
+            }
+        ).encode(),
+    }
+    monkeypatch.setattr(cli_module, "SdkSessionPlatform", lambda _key: platform)
+    result = CliRunner().invoke(app, ["raise-budget", "sesn_fake", "--to-cents", "100"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "runs" / "run_1" / "tiny" / "report.md").is_file()
+    assert not (tmp_path / "runs" / "resumed-sesn_fake").exists()

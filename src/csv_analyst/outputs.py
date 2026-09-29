@@ -15,6 +15,7 @@ from csv_analyst.platform import OutputFileInfo, SessionPlatform
 
 _CHART = re.compile(r"chart_[0-9]{2}_[a-z0-9_-]+\.png\Z")
 _BASE = {"report.md", "analysis.py", "manifest.json"}
+_FOLLOWUP_FILE = re.compile(r"followup_([1-9][0-9]*)_[A-Za-z0-9_.-]+\Z")
 
 
 class OutputError(ValueError):
@@ -27,6 +28,83 @@ class CollectedOutputs:
     files: tuple[Path, ...]
     manifest: dict[str, Any]
     ignored: tuple[str, ...]
+
+
+def next_followup_index(files: list[OutputFileInfo], dest: Path) -> int:
+    """Choose a new turn prefix without reusing remote or local artifacts."""
+    names = [file.filename for file in files]
+    if dest.is_dir():
+        names.extend(path.name for path in dest.iterdir())
+    indexes = [
+        int(match.group(1))
+        for name in names
+        if (match := _FOLLOWUP_FILE.fullmatch(name)) is not None
+    ]
+    return max(indexes, default=0) + 1
+
+
+async def collect_followup(
+    platform: SessionPlatform,
+    session_id: str,
+    dest: Path,
+    index: int,
+    *,
+    max_wait_s: float = 30,
+    poll_s: float = 2,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> tuple[Path, ...]:
+    """Download only files named by this turn's manifest, written last."""
+    if index <= 0 or max_wait_s < 0 or poll_s < 0:
+        raise ValueError("Invalid follow-up collection settings")
+    dest.mkdir(parents=True, exist_ok=True)
+    prefix = f"followup_{index}_"
+    manifest_name = prefix + "manifest.json"
+    deadline = monotonic() + max_wait_s
+    required: set[str] | None = None
+    listed: dict[str, OutputFileInfo] = {}
+    while True:
+        for file in await platform.list_output_files(session_id):
+            if Path(file.filename).name == file.filename and file.filename.startswith(
+                prefix
+            ):
+                listed[file.filename] = file
+        if required is None and manifest_name in listed:
+            await platform.download_file(listed[manifest_name].id, dest / manifest_name)
+            try:
+                payload = json.loads((dest / manifest_name).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                raise OutputError("Follow-up manifest is not valid JSON") from exc
+            names = payload.get("files") if isinstance(payload, dict) else None
+            if (
+                not isinstance(names, list)
+                or not names
+                or prefix + "report.md" not in names
+                or not all(
+                    isinstance(name, str)
+                    and name.startswith(prefix)
+                    and re.fullmatch(r"[A-Za-z0-9_.-]+", name)
+                    and name != manifest_name
+                    for name in names
+                )
+                or len(set(names)) != len(names)
+            ):
+                raise OutputError("Follow-up manifest has invalid filenames")
+            required = set(names) | {manifest_name}
+        if required is not None and required <= listed.keys():
+            break
+        if monotonic() >= deadline:
+            missing = (
+                manifest_name
+                if required is None
+                else ", ".join(sorted(required - listed.keys()))
+            )
+            raise OutputError(f"Timed out waiting for follow-up artifacts: {missing}")
+        await sleep(poll_s)
+    files = [dest / manifest_name]
+    for name in sorted(required - {manifest_name}):
+        await platform.download_file(listed[name].id, dest / name)
+        files.append(dest / name)
+    return tuple(files)
 
 
 def _validate_manifest(data: Any, input_name: str) -> list[str]:
