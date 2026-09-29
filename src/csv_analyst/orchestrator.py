@@ -46,10 +46,8 @@ class RunSummary:
 
     @property
     def isolation_passed(self) -> bool:
-        return all(
-            item.isolation is True
-            for item in self.sessions
-            if item.status == "completed"
+        return bool(self.sessions) and all(
+            item.isolation is True for item in self.sessions
         )
 
     def to_dict(self) -> dict[str, Any]:

@@ -113,6 +113,7 @@ async def test_three_outcomes_survive_one_failure(tmp_path: Path) -> None:
     assert summary.sessions[0].active_seconds == 2.5
     assert summary.sessions[1].list_cost_cents == 6
     assert summary.total_list_cost_cents == 9
+    assert summary.isolation_passed is False
     assert (tmp_path / "runs" / "summary.json").is_file()
     assert all("platform.close" in platform.calls for platform in platforms)
 
@@ -185,3 +186,33 @@ async def test_semaphore_limits_active_sessions(
     )
     assert peak == 2
     assert len(summary.sessions) == 3
+
+
+@pytest.mark.asyncio
+async def test_duplicate_session_ids_fail_isolation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import csv_analyst.orchestrator as orchestrator
+    from csv_analyst.runner import SessionResult
+
+    async def fake_run(
+        _platform: FakeSessionPlatform, _path: Path, *_args: object,
+        **_kwargs: object,
+    ) -> SessionResult:
+        return SessionResult("sesn_duplicate", "paused_budget", "budget_reached", 5, ())
+
+    monkeypatch.setattr(orchestrator, "run_session", fake_run)
+    summary = await run_many(
+        [tmp_path / "a.csv", tmp_path / "b.csv"],
+        FakeSessionPlatform,
+        "agent",
+        "env",
+        "run",
+        budget_cents=5,
+        timeout_s=10,
+        max_parallel=2,
+        output_root=tmp_path / "runs",
+    )
+    assert all(item.isolation is False for item in summary.sessions)
+    assert all(item.status == "failed" for item in summary.sessions)
+    assert summary.isolation_passed is False

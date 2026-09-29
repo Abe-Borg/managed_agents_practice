@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import pytest
 
+from csv_analyst.platform import SdkSessionPlatform
 from csv_analyst.runner import resume_budget_session
 from tests.fakes import FakeSessionPlatform
 
@@ -47,3 +51,20 @@ async def test_raise_budget_rejects_non_budget_pause() -> None:
     ]
     with pytest.raises(ValueError, match="not paused"):
         await resume_budget_session(platform, "sesn_fake", 100, timeout_s=10)
+
+
+@pytest.mark.asyncio
+async def test_sdk_budget_update_body() -> None:
+    update = AsyncMock()
+    platform = object.__new__(SdkSessionPlatform)
+    platform._client = SimpleNamespace(
+        beta=SimpleNamespace(sessions=SimpleNamespace(update=update))
+    )
+    await platform.update_session_budget("sesn_123", 100)
+    update.assert_awaited_once_with(
+        "sesn_123",
+        budget={
+            "type": "limit",
+            "max_list_cost": {"amount": "100", "currency": "USD"},
+        },
+    )
