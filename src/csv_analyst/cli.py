@@ -28,6 +28,7 @@ from csv_analyst.platform import (
     PlatformValidationError,
     SdkPlatform,
     SdkSessionPlatform,
+    SessionInfo,
 )
 from csv_analyst.resources import (
     SKILL_DIR,
@@ -36,7 +37,14 @@ from csv_analyst.resources import (
     ensure_skill,
     load_state,
 )
-from csv_analyst.runner import SessionResult, resume_budget_session
+from csv_analyst.runner import (
+    CleanupOutcome,
+    SessionResult,
+    ask_session,
+    cleanup_run,
+    resume_budget_session,
+    tail_session,
+)
 
 app = typer.Typer(help="Analyze CSV files with Claude Managed Agents.")
 
@@ -444,6 +452,167 @@ def raise_budget(
         )
     elif result.status != "completed":
         raise typer.Exit(code=1)
+
+
+@app.command()
+def ask(
+    session_id: Annotated[str, typer.Argument(help="Idle session ID.")],
+    question: Annotated[str, typer.Argument(help="Follow-up question.")],
+    timeout_s: Annotated[
+        int | None, typer.Option(help="Follow-up timeout in seconds.")
+    ] = None,
+) -> None:
+    """Ask a follow-up in the existing checkpointed sandbox."""
+    settings = _configured_settings()
+    console = Console()
+
+    async def execute() -> tuple[SessionResult, tuple[Path, ...]]:
+        assert settings.api_key is not None
+        platform = SdkSessionPlatform(settings.api_key)
+        try:
+            with Live(_progress_table("starting", "", None), console=console) as live:
+
+                def on_progress(event: ProgressEvent) -> None:
+                    live.update(
+                        _progress_table(event.kind, event.text, event.list_cost_cents)
+                    )
+
+                return await ask_session(
+                    platform,
+                    session_id,
+                    question,
+                    timeout_s=timeout_s or settings.timeout_s,
+                    sink=on_progress,
+                )
+        finally:
+            await platform.close()
+
+    try:
+        result, files = asyncio.run(execute())
+    except (ValueError, OutputError) as exc:
+        typer.echo(f"Ask failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        typer.echo(f"Ask failed: {type(exc).__name__}", err=True)
+        raise typer.Exit(code=1) from exc
+    console.print(f"Session: {session_id}")
+    console.print(f"Status: {result.status} ({result.stop_reason})")
+    console.print(f"Cumulative cost: {format_cost(result.list_cost_cents)}")
+    for file in files:
+        console.print(f"Artifact: {file}")
+    if result.status != "completed":
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def tail(
+    session_id: Annotated[str, typer.Argument(help="Session ID.")],
+    follow: Annotated[
+        bool, typer.Option("--follow", help="Continue watching across idle turns.")
+    ] = False,
+) -> None:
+    """Print persisted history and follow the live event stream once."""
+    settings = _configured_settings()
+    console = Console()
+
+    async def execute() -> None:
+        assert settings.api_key is not None
+        platform = SdkSessionPlatform(settings.api_key)
+        try:
+
+            def on_progress(event: ProgressEvent) -> None:
+                detail = (
+                    f"[{event.tool_name}] {event.text}"
+                    if event.tool_name
+                    else event.text
+                )
+                console.print(f"{event.raw_type}: {detail}")
+
+            await tail_session(platform, session_id, follow=follow, sink=on_progress)
+        finally:
+            await platform.close()
+
+    try:
+        asyncio.run(execute())
+    except Exception as exc:
+        typer.echo(f"Tail failed: {type(exc).__name__}", err=True)
+        raise typer.Exit(code=1) from exc
+
+
+@app.command()
+def cleanup(
+    run_id: Annotated[str, typer.Option("--run", help="Run ID to clean up.")],
+    delete: Annotated[
+        bool,
+        typer.Option("--delete", help="Permanently delete after local output checks."),
+    ] = False,
+) -> None:
+    """Archive a run's sessions, or carefully delete them."""
+    settings = _configured_settings()
+    console = Console()
+
+    async def execute() -> list[CleanupOutcome]:
+        assert settings.api_key is not None
+        platform = SdkSessionPlatform(settings.api_key)
+        try:
+            return await cleanup_run(platform, run_id, delete=delete)
+        finally:
+            await platform.close()
+
+    try:
+        outcomes = asyncio.run(execute())
+    except ValueError as exc:
+        typer.echo(f"Cleanup failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        typer.echo(f"Cleanup failed: {type(exc).__name__}", err=True)
+        raise typer.Exit(code=1) from exc
+    table = Table(title="Session cleanup")
+    for heading in ("Session", "Action", "Detail"):
+        table.add_column(heading)
+    for outcome in outcomes:
+        table.add_row(outcome.session_id, outcome.action, outcome.detail)
+    console.print(table)
+    if any(
+        outcome.action == "skipped" and outcome.detail != "already terminated"
+        for outcome in outcomes
+    ):
+        raise typer.Exit(code=2)
+
+
+@app.command("sessions")
+def list_sessions(
+    limit: Annotated[int, typer.Option(help="Maximum recent sessions.")] = 20,
+) -> None:
+    """List recent sessions for the saved Agent."""
+    if limit <= 0:
+        typer.echo("Limit must be positive.", err=True)
+        raise typer.Exit(code=2)
+    settings = _configured_settings()
+    state = load_state()
+    if state.agent_id is None:
+        typer.echo("Run csv-analyst setup first.", err=True)
+        raise typer.Exit(code=2)
+
+    async def execute() -> list[SessionInfo]:
+        assert settings.api_key is not None
+        platform = SdkSessionPlatform(settings.api_key)
+        try:
+            return await platform.list_sessions(state.agent_id or "", limit)
+        finally:
+            await platform.close()
+
+    try:
+        recent = asyncio.run(execute())
+    except Exception as exc:
+        typer.echo(f"Sessions failed: {type(exc).__name__}", err=True)
+        raise typer.Exit(code=1) from exc
+    table = Table(title="Recent sessions")
+    for heading in ("Session", "Status", "Title"):
+        table.add_column(heading)
+    for session in recent:
+        table.add_row(session.id, session.status, session.title or "")
+    Console().print(table)
 
 
 if __name__ == "__main__":

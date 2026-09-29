@@ -207,6 +207,7 @@ class SessionInfo:
     budget_cents: int | None = None
     list_cost_cents: int | None = None
     active_seconds: float | None = None
+    metadata: dict[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -250,6 +251,10 @@ class SessionPlatform(Protocol):
     async def update_session_budget(self, session_id: str, to_cents: int) -> None: ...
 
     async def archive_session(self, session_id: str) -> SessionInfo: ...
+
+    async def delete_session(self, session_id: str) -> None: ...
+
+    async def list_sessions(self, agent_id: str, limit: int) -> list[SessionInfo]: ...
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]: ...
 
@@ -352,6 +357,10 @@ class SdkSessionPlatform:
 
     async def retrieve_session(self, session_id: str) -> SessionInfo:
         session = await self._client.beta.sessions.retrieve(session_id)
+        return self._session_info(session)
+
+    @staticmethod
+    def _session_info(session: Any) -> SessionInfo:
         usage = session.usage
         budget = session.budget
         resolved = cast(Any, session.agent)
@@ -376,6 +385,7 @@ class SdkSessionPlatform:
                 if usage is not None and usage.active_seconds is not None
                 else None
             ),
+            metadata=dict(session.metadata),
         )
 
     async def update_session_budget(self, session_id: str, to_cents: int) -> None:
@@ -390,6 +400,19 @@ class SdkSessionPlatform:
     async def archive_session(self, session_id: str) -> SessionInfo:
         session = await self._client.beta.sessions.archive(session_id)
         return SessionInfo(session.id, session.status)
+
+    async def delete_session(self, session_id: str) -> None:
+        await self._client.beta.sessions.delete(session_id)
+
+    async def list_sessions(self, agent_id: str, limit: int) -> list[SessionInfo]:
+        sessions: list[SessionInfo] = []
+        async for session in self._client.beta.sessions.list(
+            agent_id=agent_id, limit=limit
+        ):
+            sessions.append(self._session_info(session))
+            if len(sessions) >= limit:
+                break
+        return sessions
 
     async def list_events(self, session_id: str) -> list[dict[str, Any]]:
         return [

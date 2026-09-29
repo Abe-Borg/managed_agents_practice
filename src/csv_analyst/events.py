@@ -115,7 +115,9 @@ def normalize(
         tool_input = raw.get("input")
         command = tool_input.get("command") if isinstance(tool_input, dict) else None
         return make(
-            "tool_use", _short(command if command is not None else name), tool_name=name
+            "tool_use",
+            _short(command if command is not None else tool_input or name),
+            tool_name=name,
         )
     if raw_type == "agent.tool_result":
         return make("tool_result", "Tool finished")
