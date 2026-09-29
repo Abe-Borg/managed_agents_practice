@@ -8,12 +8,12 @@ Checked the official pages on 2026-09-28 PT. The `.md` page variants returned an
 
 | Fact | Value | Source URL | Verified (PT) | By (phase/PR) | Method |
 |------|-------|-----------|---------------|---------------|--------|
-| Managed Agents status and beta header | Beta; `managed-agents-2026-04-01` is required on every Managed Agents endpoint, and the SDK sets it automatically. | https://platform.claude.com/docs/en/managed-agents/overview | 2026-09-28 | Phase 1 / no PR yet | docs |
-| Managed Agents access | Enabled by default for Claude API accounts; an API key is required. | https://platform.claude.com/docs/en/managed-agents/overview | 2026-09-28 | Phase 1 / no PR yet | docs |
-| Python SDK installation and key | Quickstart shows `pip install anthropic` and `ANTHROPIC_API_KEY` as an environment variable. | https://platform.claude.com/docs/en/managed-agents/quickstart | 2026-09-28 | Phase 1 / no PR yet | docs |
-| Latest Python SDK release observed | `anthropic==1.9.0`, released 2026-09-28; package metadata requires Python 3.10 or later, including the planned Python 3.12. | https://pypi.org/project/anthropic/ | 2026-09-28 | Phase 1 / no PR yet | docs |
-| Planned default model | `claude-haiku-4-5` is the API alias for `claude-haiku-4-5-20251001`; current model table lists $1 input / $5 output per million tokens and no effort setting. | https://platform.claude.com/docs/en/about-claude/models/overview | 2026-09-28 | Phase 1 / no PR yet | docs |
-| Default model retirement status | `claude-haiku-4-5-20251001` is active, with retirement no sooner than 2026-10-15. Recheck before any live session. | https://platform.claude.com/docs/en/about-claude/model-deprecations | 2026-09-28 | Phase 1 / no PR yet | docs |
+| Managed Agents status and beta header | Beta; `managed-agents-2026-04-01` is required on every Managed Agents endpoint, and the SDK sets it automatically. | https://platform.claude.com/docs/en/managed-agents/overview | 2026-09-28 | Phase 1 / PR #1 | docs |
+| Managed Agents access | Enabled by default for Claude API accounts; an API key is required. | https://platform.claude.com/docs/en/managed-agents/overview | 2026-09-28 | Phase 1 / PR #1 | docs |
+| Python SDK installation and key | Quickstart shows `pip install anthropic` and `ANTHROPIC_API_KEY` as an environment variable. | https://platform.claude.com/docs/en/managed-agents/quickstart | 2026-09-28 | Phase 1 / PR #1 | docs |
+| Latest Python SDK release observed | `anthropic==1.9.0`, released 2026-09-28; package metadata requires Python 3.10 or later, including the planned Python 3.12. | https://pypi.org/project/anthropic/ | 2026-09-28 | Phase 1 / PR #1 | docs |
+| Planned default model | `claude-haiku-4-5` is the API alias for `claude-haiku-4-5-20251001`; current model table lists $1 input / $5 output per million tokens and no effort setting. | https://platform.claude.com/docs/en/about-claude/models/overview | 2026-09-28 | Phase 1 / PR #1 | docs |
+| Default model retirement status | `claude-haiku-4-5-20251001` is active, with retirement no sooner than 2026-10-15. Recheck before any live session. | https://platform.claude.com/docs/en/about-claude/model-deprecations | 2026-09-28 | Phase 1 / PR #1 | docs |
 
 ## Plan snapshot: from plan, re-verify before implementation
 
