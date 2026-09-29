@@ -14,7 +14,7 @@ from csv_analyst.agent_spec import build_agent_spec, build_environment_spec
 from csv_analyst.config import load_settings
 from csv_analyst.orchestrator import check_isolation
 from csv_analyst.outputs import collect
-from csv_analyst.platform import SdkPlatform, SdkSessionPlatform
+from csv_analyst.platform import PlatformNotFound, SdkPlatform, SdkSessionPlatform
 from csv_analyst.resources import (
     SKILL_DIR,
     ensure_agent,
@@ -41,7 +41,14 @@ def test_four_session_acceptance(tmp_path: Path) -> None:
 
     setup = SdkPlatform(settings.api_key)
     environment = ensure_environment(setup, build_environment_spec())
-    if load_state().agent_id is None:
+    saved_agent_id = load_state().agent_id
+    try:
+        saved_agent = (
+            setup.retrieve_agent(saved_agent_id) if saved_agent_id is not None else None
+        )
+    except PlatformNotFound:
+        saved_agent = None
+    if saved_agent is None or saved_agent.archived:
         ensure_agent(setup, build_agent_spec(settings))
     skill = ensure_skill(setup, SKILL_DIR)
     agent = ensure_agent(setup, build_agent_spec(settings, skill_id=skill.resource.id))

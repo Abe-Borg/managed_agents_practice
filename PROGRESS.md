@@ -75,6 +75,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-29 (Phase 8): Consolidate opt-in live acceptance into one four-session suite covering saved setup, three overlapping isolated configurations, follow-up/history/archive, and budget pause/resume. Keep historical per-phase checks available under `live_extra`; they are not part of the four-session full pass.
 - 2026-09-29 (Phase 8): The final offline gate passed: `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src`, `uv run pytest -m "not live"` (82 passed, 6 optional historical live checks skipped, 1 four-session live check deselected), and `bash -n scripts/demo.sh`. One pytest cache write warning on Windows did not affect tests. `pytest -m live --collect-only -q` selected exactly one four-session test.
 - 2026-09-29 (Phase 8): Confirmed there is no `ANTHROPIC_API_KEY` environment variable or local `.env`; `uv run pytest -m live -q` selected the acceptance test and skipped it without an opt-in flag. No live sessions were created and no costs were measured.
+- 2026-09-29 (Phase 8 review): The four-session live acceptance setup now retrieves the saved Agent and bootstraps an unskilled version 1 when that Agent is archived or missing, matching the production `setup` path and preserving the version-pin checks — [PR #8 review](https://github.com/Abe-Borg/managed_agents_practice/pull/8#discussion_r4138273445).
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
