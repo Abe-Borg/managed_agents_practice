@@ -1,0 +1,56 @@
+:root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #19302b; background: #f3f5ef; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1160px; margin: auto; padding: 50px 28px 90px; }
+.hero { max-width: 740px; margin-bottom: 34px; }
+.eyebrow { color: #547d63; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+h1 { font-size: clamp(38px, 5.4vw, 68px); line-height: 1.05; letter-spacing: -.055em; margin: 14px 0 17px; }
+h2 { font-size: 29px; letter-spacing: -.035em; margin: 7px 0; }
+h3 { font-size: 22px; margin: 6px 0; }
+p { line-height: 1.55; color: #5d6d64; }
+.upload-card, .panel { background: #fff; border: 1px solid #dde6dc; border-radius: 18px; box-shadow: 0 14px 42px #1b38220c; }
+.upload-card { padding: 24px; }
+.drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 170px; border: 2px dashed #b8cfbd; border-radius: 13px; background: #f8fbf7; cursor: pointer; text-align: center; color: #547063; }
+.drop-zone strong { color: #224431; font-size: 19px; }
+.drop-zone.dragging { border-color: #207444; background: #ecf7ed; }
+.drop-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #e4f0e6; color: #207444; font-size: 28px; }
+.drop-zone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.selected-files { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.file-chip { padding: 6px 10px; background: #eaf2e9; color: #31583e; border-radius: 999px; font-size: 12px; }
+.form-row { display: flex; align-items: center; gap: 16px; margin-top: 22px; }
+.form-row label { margin-right: auto; font-weight: 650; }
+.muted { color: #88958e; font-weight: 400; }
+input[type=number], input[type=text], .followup input { padding: 11px 12px; border: 1px solid #cddbd0; border-radius: 8px; color: #19302b; font: inherit; }
+input[type=number] { width: 88px; }
+button { border: 0; border-radius: 8px; padding: 12px 18px; background: #236e45; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+button:hover { background: #185633; }
+button:disabled { opacity: .5; cursor: wait; }
+.notice { min-height: 24px; margin: 15px 0 0; font-size: 13px; }
+.notice.error { color: #9c3e30; }
+.workspace { margin-top: 46px; }
+.workspace-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.run-id { font: 12px ui-monospace, monospace; color: #819188; }
+.isolation { padding: 13px 16px; margin: 20px 0; background: #e7f0e6; border-radius: 9px; color: #31583e; font-weight: 650; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 18px; }
+.panel { padding: 20px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.badge { color: #31583e; background: #e5f1e8; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 750; }
+.metrics { display: flex; justify-content: space-between; color: #718378; font-size: 12px; padding: 12px 0 15px; }
+.reason { color: #a26d27; }
+.log { height: 175px; overflow-y: auto; margin: 0; padding: 12px 12px 12px 32px; border-radius: 8px; background: #162520; color: #cfe3d5; font: 12px/1.5 ui-monospace, monospace; }
+.log li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.log-error { color: #ffb5a5; }
+.log-done { color: #a7e8b4; }
+.result { margin-top: 18px; border-top: 1px solid #e6ede6; padding-top: 10px; }
+.report { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.report h1 { font-size: 26px; letter-spacing: -.03em; }
+.report h2 { font-size: 20px; }
+.report img { display: none; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 9px; }
+.charts img { width: 100%; border: 1px solid #e1e9df; border-radius: 7px; }
+.followup, .raise { margin-top: 16px; }
+.followup label, .raise label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+.followup div, .raise div { display: flex; gap: 7px; }
+.followup input { min-width: 0; flex: 1; }
+.followup button, .raise button { padding: 10px 13px; white-space: nowrap; }
+@media (max-width: 600px) { main { padding: 28px 16px 60px; } .form-row { flex-wrap: wrap; } .form-row label { flex-basis: 100%; } .form-row button { flex: 1; } .workspace-head { display: block; } }

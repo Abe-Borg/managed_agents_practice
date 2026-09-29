@@ -616,5 +616,27 @@ def list_sessions(
     Console().print(table)
 
 
+@app.command()
+def serve(
+    port: Annotated[
+        int, typer.Option(help="Loopback port for the local web UI.")
+    ] = 8765,
+) -> None:
+    """Serve the local browser UI on 127.0.0.1 only."""
+    if not 1 <= port <= 65535:
+        typer.echo("Port must be between 1 and 65535.", err=True)
+        raise typer.Exit(code=2)
+    from csv_analyst.web.app import create_app
+
+    try:
+        web_app = create_app()
+    except ValueError as exc:
+        typer.echo(f"Serve failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    import uvicorn
+
+    uvicorn.run(web_app, host="127.0.0.1", port=port, log_level="info")
+
+
 if __name__ == "__main__":
     app()

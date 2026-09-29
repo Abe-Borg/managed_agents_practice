@@ -6,9 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "anthropic==1.9.0",
+    "fastapi",
+    "markdown-it-py",
     "python-dotenv",
+    "python-multipart",
     "rich",
     "typer",
+    "uvicorn",
 ]
 
 [project.scripts]
@@ -20,6 +24,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "httpx",
     "mypy",
     "pytest",
     "pytest-asyncio",

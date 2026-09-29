@@ -84,6 +84,19 @@ Checked official HTML documentation on 2026-09-29 PT before implementing Phase 6
 
 Phase 6 uses a `followup_<n>_manifest.json` file written last to identify and collect a turn's new flat files. This is an application artifact convention, not a platform API field. The plan's `tail --follow` is interpreted as continuing across idle turns; without it, an idle status ends tailing.
 
+## Phase 7 documentation checks
+
+Rechecked the official HTML pages on 2026-09-29 PT before implementing Phase 7. No live API call was made. The local browser SSE endpoint is an application endpoint, not an Anthropic API endpoint.
+
+| Fact | Value | Source URL | Verified (PT) | By (phase/PR) | Method |
+|------|-------|-----------|---------------|---------------|--------|
+| Session stream and history | Managed Agents sends typed events, with `agent.message` buffered by default. Persisted events have IDs and can be listed for reconnect; opt-in `event_start`/`event_delta` previews are stream-only and cannot be replayed. Phase 7 relays normalized `ProgressEvent`s, not deltas. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 7 | docs |
+| Idle follow-up | An idle session accepts a new `user.message` and its sandbox is checkpointed; this is the existing `ask_session` path reused by the web endpoint. | https://platform.claude.com/docs/en/managed-agents/events-and-streaming | 2026-09-29 | Phase 7 | docs |
+| Output files | Session output files can appear seconds after idle; list by session scope with the Managed Agents beta header, then download. Phase 7 serves only locally collected files and does not expose file IDs. | https://platform.claude.com/docs/en/managed-agents/files | 2026-09-29 | Phase 7 | docs |
+| Budget resume | `session.usage` provides cumulative cost before idle. Updating an existing cap above consumed list cost resumes a budget-paused session without a new message; the web endpoint reuses `resume_budget_session`. | https://platform.claude.com/docs/en/managed-agents/budgets | 2026-09-29 | Phase 7 | docs |
+
+The web server's `id`, `Last-Event-ID`, and `after` cursor are local SSE replay conventions. The in-process log retains the newest 10,000 normalized events per run while the server process lives; stale explicit cursors return HTTP 409. This does not call the Managed Agents history API or claim durable replay after a server restart. For a short run, a subscriber connecting after completion receives all events. The 15-second heartbeat is also a local browser transport choice.
+
 ## Plan snapshot: remaining facts to re-verify before implementation
 
 The following entries seed §4 of [the implementation plan](../IMPLEMENTATION_PLAN.md). Their values have **not** been independently checked here. Re-fetch the linked official pages in the phase that uses each fact and replace the status with a dated verification before relying on it in code.
