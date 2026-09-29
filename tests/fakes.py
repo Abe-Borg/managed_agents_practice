@@ -107,7 +107,6 @@ class FakePlatform:
             for version in range(1, record.version + 1)
         ]
 
-
     def create_skill(self, directory: Path) -> SkillInfo:
         self.skill_creates += 1
         skill_id = f"skill_{self.skill_creates}"
@@ -187,7 +186,9 @@ class FakeSessionPlatform:
                 self.agent_reference["version"] = agent_version
         elif agent_version is not None:
             self.agent_reference = {
-                "type": "agent", "id": agent_id, "version": agent_version
+                "type": "agent",
+                "id": agent_id,
+                "version": agent_version,
             }
         else:
             self.agent_reference = agent_id

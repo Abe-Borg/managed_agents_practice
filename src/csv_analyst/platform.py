@@ -178,7 +178,6 @@ class SdkPlatform:
             for resource in versions
         ]
 
-
     def create_skill(self, directory: Path) -> SkillInfo:
         resource = self._client.skills.create(files=files_from_dir(str(directory)))
         return SkillInfo(resource.id, resource.latest_version_id)

@@ -24,7 +24,14 @@ def test_skill_frontmatter_and_instructions() -> None:
     assert 0 < len(description) <= 1024
     assert "<" not in description and ">" not in description
     body = "\n".join(lines[end + 1 :])
-    for section in ("Overview", "Data quality", "Key findings", "Charts", "Caveats", "Reproduce"):
+    for section in (
+        "Overview",
+        "Data quality",
+        "Key findings",
+        "Charts",
+        "Caveats",
+        "Reproduce",
+    ):
         assert section in body
     assert "scripts/profile_csv.py <csv>" in body
 

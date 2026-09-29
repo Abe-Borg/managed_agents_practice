@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "csv-report" / "scripts" / "profile_csv.py"
 
 
-@pytest.mark.parametrize("name", ["tiny.csv", "sales.csv", "weather.csv", "web_traffic.csv"])
+@pytest.mark.parametrize(
+    "name", ["tiny.csv", "sales.csv", "weather.csv", "web_traffic.csv"]
+)
 def test_profiler_outputs_valid_json_for_each_fixture(name: str) -> None:
     completed = subprocess.run(
         [sys.executable, str(SCRIPT), str(ROOT / "fixtures" / name)],
@@ -24,6 +26,8 @@ def test_profiler_outputs_valid_json_for_each_fixture(name: str) -> None:
     assert profile["column_count"] == len(profile["columns"]) > 0
     assert set(profile["dtypes"]) == set(profile["columns"])
     assert set(profile["null_counts"]) == set(profile["columns"])
-    assert all(0 <= count <= profile["rows"] for count in profile["null_counts"].values())
+    assert all(
+        0 <= count <= profile["rows"] for count in profile["null_counts"].values()
+    )
     assert set(profile["numeric_describe"]) <= set(profile["columns"])
     assert set(profile["top_values"]) <= set(profile["columns"])
