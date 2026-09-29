@@ -28,6 +28,7 @@ class ResourceState:
     environment_id: str | None = None
     environment_hash: str | None = None
     environment_mode: str | None = None
+    pending_archive_environment_id: str | None = None
     agent_id: str | None = None
     agent_version: int | None = None
     config_hash: str | None = None
@@ -63,6 +64,7 @@ def load_state(path: Path = STATE_PATH) -> ResourceState:
         "environment_id",
         "environment_hash",
         "environment_mode",
+        "pending_archive_environment_id",
         "agent_id",
         "config_hash",
         "skill_id",
@@ -97,6 +99,18 @@ def ensure_environment(
     state_path: Path = STATE_PATH,
 ) -> ResourceResult[EnvironmentInfo]:
     state = load_state(state_path)
+    if state.pending_archive_environment_id:
+        try:
+            pending = platform.retrieve_environment(
+                state.pending_archive_environment_id
+            )
+        except PlatformNotFound:
+            pending = None
+        if pending is not None and not pending.archived:
+            platform.archive_environment(pending.id)
+        state = replace(state, pending_archive_environment_id=None)
+        save_state(state, state_path)
+
     desired_hash = config_hash(spec.hash_input())
     previous: EnvironmentInfo | None = None
     if state.environment_id:
@@ -128,17 +142,19 @@ def ensure_environment(
         )
         created = platform.create_environment(fallback)
         mode = "unrestricted-fallback"
-    save_state(
-        replace(
-            state,
-            environment_id=created.id,
-            environment_hash=desired_hash,
-            environment_mode=mode,
+    new_state = replace(
+        state,
+        environment_id=created.id,
+        environment_hash=desired_hash,
+        environment_mode=mode,
+        pending_archive_environment_id=(
+            previous.id if previous is not None and not previous.archived else None
         ),
-        state_path,
     )
+    save_state(new_state, state_path)
     if previous is not None and not previous.archived:
         platform.archive_environment(previous.id)
+        save_state(replace(new_state, pending_archive_environment_id=None), state_path)
         return ResourceResult(created, "updated", mode)
     return ResourceResult(created, "created", mode)
 

@@ -94,6 +94,47 @@ def test_environment_setup_is_idempotent_and_replaces_changed_config(
     assert platform.environment_creates == 2
     assert platform.environment_archives == 1
     assert load_state(state_path).environment_id == changed.resource.id
+    assert load_state(state_path).pending_archive_environment_id is None
+
+
+def test_environment_archive_failure_is_retried_without_creating_another(
+    tmp_path: Path,
+) -> None:
+    class FailsArchiveOnce(FakePlatform):
+        def __init__(self) -> None:
+            super().__init__()
+            self.fail_next_archive = True
+
+        def archive_environment(self, environment_id: str) -> EnvironmentInfo:
+            if self.fail_next_archive:
+                self.fail_next_archive = False
+                raise RuntimeError("temporary archive failure")
+            return super().archive_environment(environment_id)
+
+    platform = FailsArchiveOnce()
+    state_path = tmp_path / "state.json"
+    original = ensure_environment(platform, build_environment_spec(), state_path)
+    changed_spec = replace(
+        build_environment_spec(),
+        config={"type": "cloud", "networking": {"type": "unrestricted"}},
+    )
+
+    with pytest.raises(RuntimeError, match="temporary archive failure"):
+        ensure_environment(platform, changed_spec, state_path)
+
+    interrupted_state = load_state(state_path)
+    assert interrupted_state.pending_archive_environment_id == original.resource.id
+    assert interrupted_state.environment_id != original.resource.id
+    assert not platform.environments[original.resource.id].archived
+
+    retried = ensure_environment(platform, changed_spec, state_path)
+
+    assert retried.action == "unchanged"
+    assert retried.resource.id == interrupted_state.environment_id
+    assert platform.environments[original.resource.id].archived
+    assert platform.environment_creates == 2
+    assert platform.environment_archives == 1
+    assert load_state(state_path).pending_archive_environment_id is None
 
 
 def test_state_write_is_complete_and_invalid_json_is_rejected(tmp_path: Path) -> None:

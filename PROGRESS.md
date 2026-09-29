@@ -7,7 +7,7 @@ Plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) · Verified notes: [docs/
 | # | Phase | Status | PR | Date (PT) | Notes |
 |---|-------|--------|----|-----------|-------|
 | 1 | Scaffold, fixtures, tracking files | ✅ done | [#1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) | 2026-09-28 | Merged 2026-09-28 PT; offline checks passed (13 tests). |
-| 2 | Environment + saved Agent (`setup`) | 🔍 in review | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | API docs and SDK signatures re-verified; 22 offline tests pass. Live verification pending (no key in agent env). |
+| 2 | Environment + saved Agent (`setup`) | 🔍 in review | [#2](https://github.com/Abe-Borg/managed_agents_practice/pull/2) | 2026-09-28 | API docs and SDK signatures re-verified; 23 offline tests pass, including archive retry. Live verification pending (no key in agent env). |
 | 3 | First session end-to-end (file in → stream → artifacts out, budget) | ⬜ todo | — | — | — |
 | 4 | Custom Skill + agent versioning + session overrides | ⬜ todo | — | — | — |
 | 5 | Parallel sessions, isolation proof, budget_reached + raise-budget | ⬜ todo | — | — | — |
@@ -25,6 +25,7 @@ Legend: ⬜ todo · 🚧 in progress · 🔍 in review · ✅ done · ⛔ blocke
 - 2026-09-28 (Phase 1): Pinned CI's uv installer to the published `v10.2.0` tag — the `v10` alias does not exist, and the first PR run failed while resolving the action — [setup-uv releases](https://github.com/astral-sh/setup-uv/releases).
 - 2026-09-28 (Phase 2): Confirmed [Phase 1 PR #1](https://github.com/Abe-Borg/managed_agents_practice/pull/1) merged at 2026-09-28 20:04 PT before starting Phase 2.
 - 2026-09-28 (Phase 2): If the API rejects `limited` networking with no allowed hosts, retry with the plan's documented `unrestricted` fallback, record that mode in local state, and show it in CLI output. This preserves idempotence while leaving the server's empty-list behavior for a live check.
+- 2026-09-28 (Phase 2): Keep the previous Environment ID in pending cleanup state until archive succeeds, so a failed archive is retried without creating another Environment — [PR #2 review](https://github.com/Abe-Borg/managed_agents_practice/pull/2#discussion_r4129296417).
 
 ## Open questions
 <!-- - [ ] question — where it came up — docs URL checked -->
