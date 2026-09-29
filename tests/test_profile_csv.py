@@ -31,3 +31,18 @@ def test_profiler_outputs_valid_json_for_each_fixture(name: str) -> None:
     )
     assert set(profile["numeric_describe"]) <= set(profile["columns"])
     assert set(profile["top_values"]) <= set(profile["columns"])
+
+
+def test_profiler_rejects_duplicate_headers(tmp_path: Path) -> None:
+    csv_path = tmp_path / "duplicate.csv"
+    csv_path.write_text("value,value\nfirst,second\n", encoding="utf-8")
+
+    completed = subprocess.run(
+        [sys.executable, str(SCRIPT), str(csv_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert "duplicate header names" in completed.stderr
+    assert completed.stdout == ""
