@@ -23,6 +23,9 @@ class SessionResult:
     stop_reason: str
     list_cost_cents: int | None
     error_types: tuple[str, ...]
+    agent_version: int | None = None
+    model: str | None = None
+    skill_ids: tuple[str, ...] = ()
 
 
 async def run_session(
@@ -34,6 +37,8 @@ async def run_session(
     *,
     budget_cents: int | None,
     timeout_s: int,
+    agent_version: int | None = None,
+    model: str | None = None,
     sink: Callable[[ProgressEvent], None] | None = None,
     raw_sink: Callable[[dict[str, Any]], None] | None = None,
 ) -> SessionResult:
@@ -41,6 +46,10 @@ async def run_session(
         raise ValueError("budget_cents must be positive")
     if timeout_s <= 0:
         raise ValueError("timeout_s must be positive")
+    if agent_version is not None and agent_version <= 0:
+        raise ValueError("agent_version must be positive")
+    if model is not None and not model.strip():
+        raise ValueError("model must be non-empty")
     if not input_path.is_file() or input_path.suffix.lower() != ".csv":
         raise ValueError("Input must be an existing CSV file")
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.csv", input_path.name) is None:
@@ -56,6 +65,8 @@ async def run_session(
         input_path.name,
         budget_cents,
         run_id,
+        agent_version=agent_version,
+        model=model,
     )
     stream = await platform.open_event_stream(session.id)
     reason: str | None = None
@@ -99,5 +110,12 @@ async def run_session(
     else:
         status = "failed"
     return SessionResult(
-        session.id, status, reason or "stream_ended", cost, tuple(errors)
+        session.id,
+        status,
+        reason or "stream_ended",
+        cost,
+        tuple(errors),
+        session.agent_version,
+        session.model,
+        session.skill_ids,
     )

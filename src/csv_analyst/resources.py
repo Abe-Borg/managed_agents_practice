@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -17,9 +18,11 @@ from csv_analyst.platform import (
     PlatformConflict,
     PlatformNotFound,
     PlatformValidationError,
+    SkillInfo,
 )
 
 STATE_PATH = Path(".csv-analyst/state.json")
+SKILL_DIR = Path("skills/csv-report")
 Action = Literal["created", "updated", "unchanged"]
 
 
@@ -34,6 +37,7 @@ class ResourceState:
     config_hash: str | None = None
     skill_id: str | None = None
     skill_version: str | None = None
+    skill_hash: str | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +73,7 @@ def load_state(path: Path = STATE_PATH) -> ResourceState:
         "config_hash",
         "skill_id",
         "skill_version",
+        "skill_hash",
     ):
         value = getattr(state, field_name)
         if value is not None and not isinstance(value, str):
@@ -218,3 +223,62 @@ def ensure_agent(
     )
     action: Action = "updated" if updated.version > previous.version else "unchanged"
     return ResourceResult(updated, action)
+
+
+def _skill_content_hash(directory: Path) -> str:
+    if not (directory / "SKILL.md").is_file():
+        raise ValueError(f"Skill directory {directory} needs SKILL.md")
+    digest = hashlib.sha256()
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        digest.update(path.relative_to(directory).as_posix().encode("utf-8"))
+        digest.update(bytes([0]))
+        digest.update(path.read_bytes())
+        digest.update(bytes([0]))
+    return digest.hexdigest()
+
+
+def ensure_skill(
+    platform: Platform,
+    directory: Path = SKILL_DIR,
+    state_path: Path = STATE_PATH,
+) -> ResourceResult[SkillInfo]:
+    state = load_state(state_path)
+    desired_hash = _skill_content_hash(directory)
+    previous: SkillInfo | None = None
+    if state.skill_id is not None:
+        try:
+            previous = platform.retrieve_skill(state.skill_id)
+        except PlatformNotFound:
+            previous = None
+        if (
+            previous is not None
+            and state.skill_hash == desired_hash
+            and state.skill_version == previous.latest_version_id
+        ):
+            return ResourceResult(previous, "unchanged")
+
+    if previous is None:
+        created = platform.create_skill(directory)
+        save_state(
+            replace(
+                state,
+                skill_id=created.id,
+                skill_version=created.latest_version_id,
+                skill_hash=desired_hash,
+            ),
+            state_path,
+        )
+        return ResourceResult(created, "created")
+
+    updated = platform.create_skill_version(previous.id, directory)
+    save_state(
+        replace(
+            state,
+            skill_version=updated.latest_version_id,
+            skill_hash=desired_hash,
+        ),
+        state_path,
+    )
+    return ResourceResult(updated, "updated")

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from csv_analyst.outputs import OutputError, collect
+from csv_analyst.outputs import OutputError, _validate_manifest, collect
 from csv_analyst.platform import OutputFileInfo
 from tests.fakes import FakeSessionPlatform
 
@@ -38,6 +38,7 @@ async def test_collect_waits_for_manifest_and_ignores_extra_files(
                 "columns": 2,
                 "charts": ["chart_01_sales.png"],
                 "summary": "Small fixture",
+                "skill_used": True,
             }
         ).encode(),
     }
@@ -61,3 +62,20 @@ async def test_collect_rejects_manifest_with_unexpected_upload(tmp_path: Path) -
     ).encode()
     with pytest.raises(OutputError, match="unexpected uploads"):
         await collect(platform, "sesn_fake", tmp_path / "out", "tiny.csv", max_wait_s=0)
+
+
+@pytest.mark.parametrize("flag", [None, "yes", 1])
+def test_manifest_requires_boolean_skill_used(flag: object) -> None:
+    manifest = {
+        "input_file": "tiny.csv",
+        "uploads_seen": ["tiny.csv"],
+        "markers_seen_before_write": [],
+        "rows": 1,
+        "columns": 1,
+        "summary": "Small fixture",
+        "charts": ["chart_01_sales.png"],
+    }
+    if flag is not None:
+        manifest["skill_used"] = flag
+    with pytest.raises(OutputError, match="invalid skill_used"):
+        _validate_manifest(manifest, "tiny.csv")

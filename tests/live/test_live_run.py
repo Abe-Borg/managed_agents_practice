@@ -13,7 +13,13 @@ from csv_analyst.agent_spec import build_agent_spec, build_environment_spec
 from csv_analyst.config import load_settings
 from csv_analyst.outputs import collect
 from csv_analyst.platform import SdkPlatform, SdkSessionPlatform
-from csv_analyst.resources import ensure_agent, ensure_environment
+from csv_analyst.resources import (
+    SKILL_DIR,
+    ensure_agent,
+    ensure_environment,
+    ensure_skill,
+    load_state,
+)
 from csv_analyst.runner import run_session
 
 
@@ -27,7 +33,12 @@ def test_tiny_file_produces_report_chart_script_and_manifest(tmp_path: Path) -> 
 
     setup_platform = SdkPlatform(settings.api_key)
     environment = ensure_environment(setup_platform, build_environment_spec())
-    agent = ensure_agent(setup_platform, build_agent_spec(settings))
+    if load_state().agent_id is None:
+        ensure_agent(setup_platform, build_agent_spec(settings))
+    skill = ensure_skill(setup_platform, SKILL_DIR)
+    agent = ensure_agent(
+        setup_platform, build_agent_spec(settings, skill_id=skill.resource.id)
+    )
     tiny = Path("fixtures/tiny.csv")
 
     async def execute() -> tuple[str, int | None]:

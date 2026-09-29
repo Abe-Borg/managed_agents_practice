@@ -56,7 +56,9 @@ def config_hash(value: object) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def build_agent_spec(settings: Settings, *, system: str = SYSTEM_PROMPT) -> AgentSpec:
+def build_agent_spec(
+    settings: Settings, *, system: str = SYSTEM_PROMPT, skill_id: str | None = None
+) -> AgentSpec:
     enabled = ("bash", "read", "write", "edit", "glob", "grep")
     toolset: dict[str, object] = {
         "type": "agent_toolset_20260401",
@@ -69,7 +71,11 @@ def build_agent_spec(settings: Settings, *, system: str = SYSTEM_PROMPT) -> Agen
         system=system,
         tools=[toolset],
         metadata={"app": AGENT_NAME},
-        skills=[],
+        skills=(
+            [{"type": "custom", "skill_id": skill_id, "version": "latest"}]
+            if skill_id is not None
+            else []
+        ),
     )
 
 

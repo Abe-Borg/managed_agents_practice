@@ -15,6 +15,7 @@ from csv_analyst.platform import (
     PlatformConflict,
     PlatformNotFound,
     SessionInfo,
+    SkillInfo,
 )
 
 
@@ -40,6 +41,9 @@ class FakePlatform:
         self.environment_creates = 0
         self.environment_archives = 0
         self.agent_conflicts = 0
+        self.skills: dict[str, str] = {}
+        self.skill_creates = 0
+        self.skill_version_creates = 0
 
     def create_environment(self, spec: EnvironmentSpec) -> EnvironmentInfo:
         self.environment_creates += 1
@@ -103,6 +107,27 @@ class FakePlatform:
             for version in range(1, record.version + 1)
         ]
 
+    def create_skill(self, directory: Path) -> SkillInfo:
+        self.skill_creates += 1
+        skill_id = f"skill_{self.skill_creates}"
+        version_id = f"skver_{self.skill_creates}_1"
+        self.skills[skill_id] = version_id
+        return SkillInfo(skill_id, version_id)
+
+    def retrieve_skill(self, skill_id: str) -> SkillInfo:
+        version_id = self.skills.get(skill_id)
+        if version_id is None:
+            raise PlatformNotFound(skill_id)
+        return SkillInfo(skill_id, version_id)
+
+    def create_skill_version(self, skill_id: str, directory: Path) -> SkillInfo:
+        if skill_id not in self.skills:
+            raise PlatformNotFound(skill_id)
+        self.skill_version_creates += 1
+        version_id = f"skver_{skill_id}_{self.skill_version_creates + 1}"
+        self.skills[skill_id] = version_id
+        return SkillInfo(skill_id, version_id)
+
 
 class FakeEventStream:
     def __init__(self, events: list[dict[str, Any]], calls: list[str]) -> None:
@@ -125,6 +150,10 @@ class FakeSessionPlatform:
         self.output_schedule: list[list[OutputFileInfo]] = []
         self.output_payloads: dict[str, bytes] = {}
         self.list_calls = 0
+        self.agent_reference: str | dict[str, Any] | None = None
+        self.saved_agent_version = 2
+        self.saved_model = "claude-haiku-4-5"
+        self.saved_skill_ids = ("skill_1",)
 
     async def close(self) -> None:
         self.calls.append("platform.close")
@@ -141,10 +170,36 @@ class FakeSessionPlatform:
         input_name: str,
         budget_cents: int | None,
         run_id: str,
+        *,
+        agent_version: int | None = None,
+        model: str | None = None,
     ) -> SessionInfo:
         self.calls.append("session.create")
         self.budget_cents = budget_cents
-        return SessionInfo("sesn_fake", "pending")
+        if model is not None:
+            self.agent_reference = {
+                "type": "agent_with_overrides",
+                "id": agent_id,
+                "model": {"id": model},
+            }
+            if agent_version is not None:
+                self.agent_reference["version"] = agent_version
+        elif agent_version is not None:
+            self.agent_reference = {
+                "type": "agent",
+                "id": agent_id,
+                "version": agent_version,
+            }
+        else:
+            self.agent_reference = agent_id
+        resolved_version = agent_version or self.saved_agent_version
+        return SessionInfo(
+            "sesn_fake",
+            "pending",
+            agent_version=resolved_version,
+            model=model or self.saved_model,
+            skill_ids=() if resolved_version == 1 else self.saved_skill_ids,
+        )
 
     async def open_event_stream(self, session_id: str) -> FakeEventStream:
         self.calls.append("stream.open")

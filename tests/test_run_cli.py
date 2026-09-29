@@ -38,6 +38,7 @@ def test_run_command_downloads_artifacts_with_fake_session(
                 "columns": 1,
                 "charts": ["chart_01_values.png"],
                 "summary": "Tiny data",
+                "skill_used": True,
             }
         ).encode(),
     }
@@ -50,3 +51,27 @@ def test_run_command_downloads_artifacts_with_fake_session(
     assert "Artifacts:" in result.output
     assert platform.budget_cents == 50
     assert len(list(Path("runs").glob("*/tiny/report.md"))) == 1
+
+    override = CliRunner().invoke(
+        app,
+        [
+            "run",
+            "tiny.csv",
+            "--agent-version",
+            "1",
+            "--model",
+            "claude-sonnet-5-5",
+            "--budget-cents",
+            "50",
+        ],
+    )
+    assert override.exit_code == 0, override.output
+    assert "Agent version: 1" in override.output
+    assert "Model: claude-sonnet-5-5" in override.output
+    assert "Attached Skills: none" in override.output
+    assert platform.agent_reference == {
+        "type": "agent_with_overrides",
+        "id": "agent_1",
+        "version": 1,
+        "model": {"id": "claude-sonnet-5-5"},
+    }

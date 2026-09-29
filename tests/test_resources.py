@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from dataclasses import replace
 from pathlib import Path
 
@@ -179,6 +180,8 @@ def test_setup_and_resources_commands_use_saved_state(
 ) -> None:
     platform = FakePlatform()
     monkeypatch.chdir(tmp_path)
+    source_skill = Path(__file__).resolve().parents[1] / "skills" / "csv-report"
+    shutil.copytree(source_skill, tmp_path / "skills" / "csv-report")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-cli-test")
     monkeypatch.setattr(cli_module, "SdkPlatform", lambda _key: platform)
     runner = CliRunner()
@@ -188,7 +191,40 @@ def test_setup_and_resources_commands_use_saved_state(
     listed = runner.invoke(app, ["resources"])
 
     assert first.exit_code == second.exit_code == listed.exit_code == 0
-    assert "created" in first.output
+    assert "Skill: skill_1" in first.output
+    assert "updated" in first.output and "v2" in first.output
     assert "unchanged" in second.output
+    assert platform.agent_creates == 1
+    assert platform.agent_updates == 1
     assert "Agent versions" in listed.output
+    assert "Skill: skill_1" in listed.output
     assert "agent_1" in listed.output
+
+
+@pytest.mark.parametrize("stale_mode", ["archived", "deleted"])
+def test_setup_bootstraps_unskilled_agent_after_stale_saved_agent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, stale_mode: str
+) -> None:
+    platform = FakePlatform()
+    monkeypatch.chdir(tmp_path)
+    source_skill = Path(__file__).resolve().parents[1] / "skills" / "csv-report"
+    shutil.copytree(source_skill, tmp_path / "skills" / "csv-report")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-cli-test")
+    monkeypatch.setattr(cli_module, "SdkPlatform", lambda _key: platform)
+    runner = CliRunner()
+
+    first = runner.invoke(app, ["setup"])
+    assert first.exit_code == 0, first.output
+    if stale_mode == "archived":
+        platform.agents["agent_1"].archived = True
+    else:
+        del platform.agents["agent_1"]
+
+    second = runner.invoke(app, ["setup"])
+
+    assert second.exit_code == 0, second.output
+    assert "Agent: agent_2 v2" in second.output
+    assert platform.agent_creates == 2
+    assert platform.agent_updates == 2
+    assert load_state().agent_id == "agent_2"
+    assert load_state().agent_version == 2

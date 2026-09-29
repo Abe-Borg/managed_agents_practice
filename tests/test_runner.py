@@ -103,3 +103,53 @@ async def test_runner_recovers_from_retrying_error(tmp_path: Path) -> None:
     assert result.stop_reason == "end_turn"
     assert result.error_types == ("model_rate_limited_error",)
     assert any(event.kind == "error" for event in seen)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("version", "model", "expected_reference", "expected_skills"),
+    [
+        (1, None, {"type": "agent", "id": "agent_1", "version": 1}, ()),
+        (
+            1,
+            "claude-sonnet-5-5",
+            {
+                "type": "agent_with_overrides",
+                "id": "agent_1",
+                "version": 1,
+                "model": {"id": "claude-sonnet-5-5"},
+            },
+            (),
+        ),
+    ],
+)
+async def test_runner_pins_version_and_overrides_model(
+    tmp_path: Path,
+    version: int,
+    model: str | None,
+    expected_reference: dict[str, object],
+    expected_skills: tuple[str, ...],
+) -> None:
+    path = tmp_path / "tiny.csv"
+    path.write_text("x\n1\n", encoding="utf-8")
+    platform = FakeSessionPlatform(
+        [{"type": "session.status_idle", "stop_reason": {"type": "end_turn"}}]
+    )
+
+    result = await run_session(
+        platform,
+        path,
+        "agent_1",
+        "env_1",
+        "run_1",
+        budget_cents=50,
+        timeout_s=10,
+        agent_version=version,
+        model=model,
+    )
+
+    assert result.status == "completed"
+    assert result.agent_version == version
+    assert result.model == (model or platform.saved_model)
+    assert result.skill_ids == expected_skills
+    assert platform.agent_reference == expected_reference
